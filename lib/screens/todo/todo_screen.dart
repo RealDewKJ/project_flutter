@@ -50,7 +50,7 @@ class _TodoScreenState extends State<TodoScreen> {
       'Content-Type': 'application/json',
     };
     final response = await http.get(
-        Uri.parse('http://10.0.2.2:6004/api/todo_list/${userId}'),
+        Uri.parse('http://10.0.2.2:6004/api/todo_list/$userId'),
         headers: headers);
     if (response.statusCode == 200) {
       final articleData = jsonDecode(response.body) as List<dynamic>;
@@ -158,49 +158,51 @@ class _TodoScreenState extends State<TodoScreen> {
           ),
         ),
       ),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Color.fromRGBO(217, 217, 217, 0.09),
-          ),
-          child: FutureBuilder<List<Article>>(
-            future: articles,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              } else if (snapshot.hasData &&
-                  snapshot.connectionState == ConnectionState.done) {
-                List<Article>? articles = snapshot.data;
-                if (articles != null) {
-                  // You can loop through articles and display them
-                  return ListView.builder(
-                    itemCount: articles.length,
-                    itemBuilder: (context, index) {
-                      Article article = articles[index];
-                      return TodoCard(
-                        title: article.title,
-                        content: article.content,
-                        date: article.date,
-                        isCompleted:
-                            article.isCompleted == "true" ? true : false,
-                        id: article.id,
-                      );
-                    },
-                  );
+      body: Container(
+        child: SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: HexColor("#D9D9D9").withOpacity(0.09),
+            ),
+            child: FutureBuilder<List<Article>>(
+              future: articles,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                } else if (snapshot.hasData &&
+                    snapshot.connectionState == ConnectionState.done) {
+                  List<Article>? articles = snapshot.data;
+                  if (articles != null) {
+                    // You can loop through articles and display them
+                    return ListView.builder(
+                      itemCount: articles.length,
+                      itemBuilder: (context, index) {
+                        Article article = articles[index];
+                        return TodoCard(
+                          title: article.title,
+                          content: article.content,
+                          date: article.date,
+                          isCompleted:
+                              article.isCompleted == "true" ? true : false,
+                          id: article.id,
+                        );
+                      },
+                    );
+                  }
+                  ;
+                  // const SingleChildScrollView(
+                  //   child: Column(
+                  //     children: <Widget>[TodoCard()],
+                  //   ),
+                  // );
+                } else if (snapshot.hasError) {
+                  return Text('${snapshot.error}');
                 }
-                ;
-                // const SingleChildScrollView(
-                //   child: Column(
-                //     children: <Widget>[TodoCard()],
-                //   ),
-                // );
-              } else if (snapshot.hasError) {
-                return Text('${snapshot.error}');
-              }
-              return const CircularProgressIndicator();
-            },
+                return const CircularProgressIndicator();
+              },
+            ),
           ),
         ),
       ),

@@ -5,21 +5,30 @@ class InputForm extends StatelessWidget {
   final String title;
   final TextEditingController value;
   final bool ebscuerText;
+  final double leftPadding;
+  final double rightPadding;
+  final int maxLines;
+  final HexColor colorInput;
 
   const InputForm(
       {super.key,
       required this.title,
       required this.value,
-      required this.ebscuerText});
+      required this.ebscuerText,
+      required this.leftPadding,
+      required this.rightPadding,
+      required this.maxLines,
+      required this.colorInput});
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(left: 40.0, right: 40),
+        padding: EdgeInsets.only(left: leftPadding, right: rightPadding),
         child: Material(
           elevation: 1,
           borderRadius: BorderRadius.circular(15),
           child: TextField(
+            maxLines: maxLines,
             controller: value,
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
@@ -33,7 +42,7 @@ class InputForm extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
                 borderSide: const BorderSide(color: Colors.transparent),
               ),
-              fillColor: HexColor("#F3F3F3"),
+              fillColor: (colorInput),
               filled: true,
               hintText: title,
               hintStyle: TextStyle(

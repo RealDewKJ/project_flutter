@@ -65,9 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
             context: context,
             builder: (_) => AlertDialog(
                   title: const Text("Login Failed"),
-                  content: Container(
+                  content: const SizedBox(
                     height: 20,
-                    child: const Column(
+                    child: Column(
                       children: [
                         Row(
                           children: [
@@ -82,12 +82,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
-                        child: Text("OK"))
+                        child: const Text("OK"))
                   ],
                 ));
       }
     } catch (e) {
-      print(e.toString());
+      devtools.log(e.toString());
     }
   }
 
@@ -140,11 +140,27 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(
                 height: 34,
               ),
-              InputForm(title: "Email", value: _email, ebscuerText: false),
+              InputForm(
+                title: "Email",
+                value: _email,
+                ebscuerText: false,
+                leftPadding: 40,
+                rightPadding: 40,
+                maxLines: 1,
+                colorInput: HexColor("#F3F3F3"),
+              ),
               const SizedBox(
                 height: 19,
               ),
-              InputForm(title: "Password", value: _password, ebscuerText: true),
+              InputForm(
+                title: "Password",
+                value: _password,
+                ebscuerText: true,
+                leftPadding: 40,
+                rightPadding: 40,
+                maxLines: 1,
+                colorInput: HexColor("#F3F3F3"),
+              ),
               const SizedBox(
                 height: 19,
               ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as devtools show log;
 
 class TodoCard extends StatefulWidget {
   final String title;
@@ -48,10 +49,10 @@ class _TodoCardState extends State<TodoCard> {
           widget.isCompleted = value;
         });
       } else {
-        print('failed');
+        devtools.log('failed');
       }
     } catch (e) {
-      print(e.toString());
+      devtools.log(e.toString());
     }
   }
 
@@ -94,39 +95,47 @@ class _TodoCardState extends State<TodoCard> {
                     },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontFamily: 'outfit',
-                            fontWeight: FontWeight.w500,
-                            color: HexColor("#0D7A5C")),
-                      ),
-                      Text(
-                        widget.date.toString(),
-                        style: TextStyle(
-                            fontFamily: 'outfit',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: HexColor("#D9D9D9")),
-                      ),
-                      const SizedBox(
-                        height: 6,
-                      ),
-                      Text(
-                        widget.content,
-                        style: TextStyle(
-                            fontFamily: 'outfit',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: HexColor("#666161").withOpacity(0.68)),
-                      )
-                    ],
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontFamily: 'outfit',
+                              fontWeight: FontWeight.w500,
+                              color: HexColor("#0D7A5C")),
+                        ),
+                        Text(
+                          widget.date.toString(),
+                          style: TextStyle(
+                              fontFamily: 'outfit',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                              color: HexColor("#D9D9D9")),
+                        ),
+                        const SizedBox(
+                          height: 6,
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 11.0),
+                            child: Text(
+                              widget.content,
+                              maxLines: 3,
+                              style: TextStyle(
+                                  fontFamily: 'outfit',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: HexColor("#666161").withOpacity(0.68)),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                 )
               ],
