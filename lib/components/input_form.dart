@@ -27,7 +27,7 @@ class InputForm extends StatelessWidget {
         child: Material(
           elevation: 1,
           borderRadius: BorderRadius.circular(15),
-          child: TextField(
+          child: TextFormField(
             maxLines: maxLines,
             controller: value,
             keyboardType: TextInputType.emailAddress,

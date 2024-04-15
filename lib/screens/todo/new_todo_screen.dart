@@ -122,122 +122,125 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
         ),
         child: Container(
           padding: const EdgeInsets.only(top: 10),
-          child: Column(
-            children: [
-              InputForm(
-                title: "Title",
-                value: _title,
-                ebscuerText: false,
-                leftPadding: 21,
-                rightPadding: 18,
-                maxLines: 1,
-                colorInput: HexColor("#FFFFFF"),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              InputForm(
-                title: "Description",
-                value: _description,
-                ebscuerText: false,
-                leftPadding: 21,
-                rightPadding: 18,
-                maxLines: 8,
-                colorInput: HexColor("#FFFFFF"),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 10.0, left: 21, right: 18),
-                child: SizedBox(
-                  height: 59,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      color: Colors.white,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.2),
-                          offset: Offset(0, 0),
-                          blurRadius: 6,
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 19),
-                      child: Row(
-                        children: [
-                          Text(
-                            "Success",
-                            style: TextStyle(
-                                color: HexColor("#0D7A5C"),
-                                fontFamily: 'outfit',
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 230.0),
-                            child: Switch(
-                              // This bool value toggles the switch.
-                              value: isCompleted,
-                              activeColor: Colors.green,
-                              onChanged: (bool value) {
-                                // This is called when the user toggles the switch.
-                                setState(() {
-                                  isCompleted = value;
-                                });
-                              },
-                            ),
+          child: Form(
+            child: Column(
+              children: [
+                InputForm(
+                  title: "Title",
+                  value: _title,
+                  ebscuerText: false,
+                  leftPadding: 21,
+                  rightPadding: 18,
+                  maxLines: 1,
+                  colorInput: HexColor("#FFFFFF"),
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                InputForm(
+                  title: "Description",
+                  value: _description,
+                  ebscuerText: false,
+                  leftPadding: 21,
+                  rightPadding: 18,
+                  maxLines: 8,
+                  colorInput: HexColor("#FFFFFF"),
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.only(top: 10.0, left: 21, right: 18),
+                  child: SizedBox(
+                    height: 59,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        color: Colors.white,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color.fromRGBO(0, 0, 0, 0.2),
+                            offset: Offset(0, 0),
+                            blurRadius: 6,
+                            spreadRadius: 0,
                           ),
                         ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 19),
+                        child: Row(
+                          children: [
+                            Text(
+                              "Success",
+                              style: TextStyle(
+                                  color: HexColor("#0D7A5C"),
+                                  fontFamily: 'outfit',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 230.0),
+                              child: Switch(
+                                // This bool value toggles the switch.
+                                value: isCompleted,
+                                activeColor: Colors.green,
+                                onChanged: (bool value) {
+                                  // This is called when the user toggles the switch.
+                                  setState(() {
+                                    isCompleted = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(bottom: 19), // Padding bottom
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SizedBox(
-                          height: 70,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal:
-                                    21), // Set padding for left and right
-                            child: GradientElevatedButton(
-                              onPressed: () {
-                                addTodo(
-                                  _title.text.toString(),
-                                  _description.text.toString(),
-                                  isCompleted.toString(),
-                                );
-                              },
-                              style: GradientElevatedButton.styleFrom(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    HexColor("#53CD9F"),
-                                    HexColor("#0D7A5C"),
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.only(bottom: 19), // Padding bottom
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: SizedBox(
+                            height: 70,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal:
+                                      21), // Set padding for left and right
+                              child: GradientElevatedButton(
+                                onPressed: () {
+                                  addTodo(
+                                    _title.text.toString(),
+                                    _description.text.toString(),
+                                    isCompleted.toString(),
+                                  );
+                                },
+                                style: GradientElevatedButton.styleFrom(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      HexColor("#53CD9F"),
+                                      HexColor("#0D7A5C"),
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
-                              ),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: const Text(
-                                  "Save",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 20,
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: const Text(
+                                    "Save",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 20,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -245,11 +248,11 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

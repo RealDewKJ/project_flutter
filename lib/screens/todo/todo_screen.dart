@@ -270,38 +270,41 @@ Future _displayBottomSheet(BuildContext context) {
                     onTap: () {
                       signOut(context);
                     },
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: HexColor("#3CB189").withOpacity(0.4),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_sharp,
-                              color: HexColor("#3CB189"),
-                              size: 15,
+                    child: Container(
+                      color: Colors.white,
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 25,
+                            height: 25,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: HexColor("#3CB189").withOpacity(0.4),
+                              ),
+                              child: Icon(
+                                Icons.arrow_back_sharp,
+                                color: HexColor("#3CB189"),
+                                size: 15,
+                              ),
                             ),
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.only(left: 7),
-                          child: Text(
-                            'Signout',
-                            style: TextStyle(
-                                fontFamily: 'Outfit',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 16,
-                                color: HexColor("#0D7A5C")),
+                          Container(
+                            padding: const EdgeInsets.only(left: 7),
+                            child: Text(
+                              'Signout',
+                              style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
+                                  color: HexColor("#0D7A5C")),
+                            ),
                           ),
-                        ),
-                        Container(
-                            padding: const EdgeInsets.only(left: 236),
-                            child: const Icon(Icons.chevron_right)),
-                      ],
+                          Container(
+                              padding: const EdgeInsets.only(left: 236),
+                              child: const Icon(Icons.chevron_right)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
