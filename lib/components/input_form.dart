@@ -4,7 +4,7 @@ import 'package:hexcolor/hexcolor.dart';
 class InputForm extends StatelessWidget {
   final String title;
   final TextEditingController value;
-  final bool ebscuerText;
+  final bool obscureText;
   final double leftPadding;
   final double rightPadding;
   final int maxLines;
@@ -14,7 +14,7 @@ class InputForm extends StatelessWidget {
       {super.key,
       required this.title,
       required this.value,
-      required this.ebscuerText,
+      required this.obscureText,
       required this.leftPadding,
       required this.rightPadding,
       required this.maxLines,
@@ -31,8 +31,7 @@ class InputForm extends StatelessWidget {
             maxLines: maxLines,
             controller: value,
             keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            obscureText: ebscuerText,
+            obscureText: obscureText,
             decoration: InputDecoration(
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),

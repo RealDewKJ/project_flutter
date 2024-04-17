@@ -30,16 +30,6 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           useMaterial3: false,
           textTheme: GoogleFonts.outfitTextTheme(),
-          // colorScheme: const ColorScheme.light(
-          //     background: Colors.white,
-          //     onBackground: Colors.black,
-          //     primary: Color.fromRGBO(255, 255, 255, 1),
-          //     onPrimary: Color.fromARGB(255, 82, 223, 139),
-          //     secondary: Color.fromRGBO(139, 220, 200, 1),
-          //     onSecondary: Colors.white,
-          //     tertiary: Color.fromRGBO(139, 228, 200, 1),
-          //     error: Colors.red,
-          //     outline: Color(0xFF424242)),
         ),
         home: isFirstLaunch ? const TodoScreen() : const LoginScreen(),
         routes: {

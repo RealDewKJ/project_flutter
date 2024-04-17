@@ -6,6 +6,7 @@ import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -38,28 +39,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void register(firstName, lastName, email, password) async {
-    final url = Uri.parse('http://10.0.2.2:6004/api/create_user');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-    };
-    final body = jsonEncode({
-      "user_email": email,
-      "user_password": password,
-      "user_fname": firstName,
-      "user_lname": lastName,
-    });
-    try {
-      var response = await http.post(url, headers: header, body: body);
-      if (response.statusCode == 200) {
-        Navigator.of(context).pushNamed(loginRoutes);
-      } else {
-        print('failed');
-      }
-    } catch (e) {
-      print(e.toString());
-    }
+    await AuthService.signUp(firstName, lastName, email, password, context);
   }
 
   @override
@@ -139,7 +119,7 @@ class _SignupScreenState extends State<SignupScreen> {
               InputForm(
                 title: "First name",
                 value: _firstName,
-                ebscuerText: false,
+                obscureText: false,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,
@@ -151,7 +131,7 @@ class _SignupScreenState extends State<SignupScreen> {
               InputForm(
                 title: "Last name",
                 value: _lastName,
-                ebscuerText: false,
+                obscureText: false,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,
@@ -163,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
               InputForm(
                 title: "Email",
                 value: _email,
-                ebscuerText: false,
+                obscureText: false,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,
@@ -175,7 +155,7 @@ class _SignupScreenState extends State<SignupScreen> {
               InputForm(
                 title: "Password",
                 value: _password,
-                ebscuerText: true,
+                obscureText: true,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,

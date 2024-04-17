@@ -1,15 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/constant/routes.dart';
-import 'package:http/http.dart' as http;
-import 'dart:developer' as devtools show log;
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,59 +31,8 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void login(String email, password) async {
-    final url = Uri.parse('http://10.0.2.2:6004/api/login');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-    };
-    final body = jsonEncode({
-      "user_email": email,
-      "user_password": password,
-    });
-    try {
-      var response = await http.post(url, headers: header, body: body);
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool('loggedIn', true);
-        await prefs.setInt('user_id', data['user_id']);
-        await prefs.setString('user_email', data['user_email']);
-        await prefs.setString('user_fname', data['user_fname']);
-        await prefs.setString('user_lname', data['user_lname']);
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
-      } else {
-        showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-                  title: const Text("Login Failed"),
-                  content: const SizedBox(
-                    height: 20,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Text("Email or password is incorrect."),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("OK"))
-                  ],
-                ));
-      }
-    } catch (e) {
-      devtools.log(e.toString());
-    }
+  void login(String email, password, context) async {
+    await AuthService.login(email, password, context);
   }
 
   @override
@@ -143,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
               InputForm(
                 title: "Email",
                 value: _email,
-                ebscuerText: false,
+                obscureText: false,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,
@@ -155,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
               InputForm(
                 title: "Password",
                 value: _password,
-                ebscuerText: true,
+                obscureText: true,
                 leftPadding: 40,
                 rightPadding: 40,
                 maxLines: 1,
@@ -188,7 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 70,
                 child: GradientElevatedButton(
                   onPressed: () {
-                    login(_email.text.toString(), _password.text.toString());
+                    login(_email.text.toString(), _password.text.toString(),
+                        context);
                   },
                   style: GradientElevatedButton.styleFrom(
                     gradient: LinearGradient(

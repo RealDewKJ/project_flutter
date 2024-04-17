@@ -128,7 +128,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                 InputForm(
                   title: "Title",
                   value: _title,
-                  ebscuerText: false,
+                  obscureText: false,
                   leftPadding: 21,
                   rightPadding: 18,
                   maxLines: 1,
@@ -140,7 +140,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                 InputForm(
                   title: "Description",
                   value: _description,
-                  ebscuerText: false,
+                  obscureText: false,
                   leftPadding: 21,
                   rightPadding: 18,
                   maxLines: 8,

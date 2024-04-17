@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/todo_card.dart';
 import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/models/todo_model.dart';
+import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
@@ -14,23 +16,8 @@ class TodoScreen extends StatefulWidget {
   State<TodoScreen> createState() => _TodoScreenState();
 }
 
-class Article {
-  final String title;
-  final String content;
-  final String date;
-  final String isCompleted;
-  final int id;
-
-  Article(
-      {required this.title,
-      required this.content,
-      required this.date,
-      required this.isCompleted,
-      required this.id});
-}
-
 class _TodoScreenState extends State<TodoScreen> {
-  late Future<List<Article>> articles = Future.value([]);
+  late Future<List<Todo>> todos = Future.value([]);
   String? readFirstname;
   String? firstCharFirstName;
   String? readLastname;
@@ -44,7 +31,7 @@ class _TodoScreenState extends State<TodoScreen> {
     _readUserData();
   }
 
-  Future<List<Article>> _getArticles(int userId) async {
+  Future<List<Todo>> _getTodos(int userId) async {
     final headers = {
       'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
       'Content-Type': 'application/json',
@@ -53,13 +40,13 @@ class _TodoScreenState extends State<TodoScreen> {
         Uri.parse('http://10.0.2.2:6004/api/todo_list/$userId'),
         headers: headers);
     if (response.statusCode == 200) {
-      final articleData = jsonDecode(response.body) as List<dynamic>;
-      devtools.log(articleData.toString());
-      return articleData.map((item) {
+      final todoData = jsonDecode(response.body) as List<dynamic>;
+      devtools.log(todoData.toString());
+      return todoData.map((item) {
         DateTime dateTime = DateTime.parse(item['user_todo_list_last_update']);
         String formattedDate =
             DateFormat('hh:mm a - dd/MM/yy').format(dateTime);
-        return Article(
+        return Todo(
           title: item['user_todo_list_title'],
           content: item['user_todo_list_desc'],
           date: formattedDate,
@@ -68,7 +55,7 @@ class _TodoScreenState extends State<TodoScreen> {
         );
       }).toList();
     } else {
-      throw Exception('Failed to fetch articles');
+      throw Exception('Failed to fetch todos');
     }
   }
 
@@ -85,7 +72,7 @@ class _TodoScreenState extends State<TodoScreen> {
 
     if (readUserId != null) {
       setState(() {
-        articles = _getArticles(readUserId!);
+        todos = _getTodos(readUserId!);
       });
     }
   }
@@ -166,37 +153,30 @@ class _TodoScreenState extends State<TodoScreen> {
             decoration: BoxDecoration(
               color: HexColor("#D9D9D9").withOpacity(0.09),
             ),
-            child: FutureBuilder<List<Article>>(
-              future: articles,
+            child: FutureBuilder<List<Todo>>(
+              future: todos,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasData &&
                     snapshot.connectionState == ConnectionState.done) {
-                  List<Article>? articles = snapshot.data;
-                  if (articles != null) {
-                    // You can loop through articles and display them
+                  List<Todo>? todos = snapshot.data;
+                  if (todos != null) {
                     return ListView.builder(
-                      itemCount: articles.length,
+                      itemCount: todos.length,
                       itemBuilder: (context, index) {
-                        Article article = articles[index];
+                        Todo todo = todos[index];
                         return TodoCard(
-                          title: article.title,
-                          content: article.content,
-                          date: article.date,
+                          title: todo.title,
+                          content: todo.content,
+                          date: todo.date,
                           isCompleted:
-                              article.isCompleted == "true" ? true : false,
-                          id: article.id,
+                              todo.isCompleted == "true" ? true : false,
+                          id: todo.id,
                         );
                       },
                     );
                   }
-                  ;
-                  // const SingleChildScrollView(
-                  //   child: Column(
-                  //     children: <Widget>[TodoCard()],
-                  //   ),
-                  // );
                 } else if (snapshot.hasError) {
                   return Text('${snapshot.error}');
                 }
@@ -271,7 +251,7 @@ Future _displayBottomSheet(BuildContext context) {
                       signOut(context);
                     },
                     child: Container(
-                      color: Colors.white,
+                      color: HexColor("#D9D9D9").withOpacity(0.00),
                       child: Row(
                         children: [
                           SizedBox(
@@ -314,21 +294,5 @@ Future _displayBottomSheet(BuildContext context) {
 }
 
 signOut(context) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
-  Navigator.of(context).pushNamedAndRemoveUntil(loginRoutes, (routes) => false);
-  await prefs.setBool('loggedIn', false);
+  await AuthService.logout(context);
 }
-
-//TODO Logout Code
-// child: Center(
-//             child: TextButton(
-//               onPressed: () async {
-//                 final prefs = await SharedPreferences.getInstance();
-//                 await prefs.clear();
-//                 Navigator.of(context).pushNamed(loginRoutes);
-//               },
-//               child:
-//                   const Text('Logout', style: TextStyle(color: Colors.black)),
-//             ),
-//           ),
