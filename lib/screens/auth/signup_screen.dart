@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
@@ -39,7 +38,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void register(firstName, lastName, email, password) async {
-    await AuthService.signUp(firstName, lastName, email, password, context);
+    await AuthService().signUp(firstName, lastName, email, password, context);
   }
 
   @override

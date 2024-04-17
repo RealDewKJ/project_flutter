@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:project_flutter_dew/constant/routes.dart';
-import 'package:project_flutter_dew/screens/login_screen.dart';
+import 'package:project_flutter_dew/screens/auth/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project_flutter_dew/screens/signup_screen.dart';
+import 'package:project_flutter_dew/screens/auth/signup_screen.dart';
+import 'package:project_flutter_dew/screens/todo/edit_todo_screen.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
 import 'package:project_flutter_dew/screens/todo/todo_screen.dart';
+import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as devtools show log;
 

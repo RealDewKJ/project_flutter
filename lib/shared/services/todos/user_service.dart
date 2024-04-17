@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
-  static Future<void> readUserData(
+  Future<void> readUserData(
     void Function(String?) onFirstnameUpdated,
     void Function(String?) onLastnameUpdated,
     void Function(int?) onUserIdUpdated,

@@ -7,20 +7,20 @@ import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
 
 class AuthService {
-  static Future<bool> login(
+  String url = 'http://10.0.2.2:6004';
+  final header = {
+    "Content-type": "application/json",
+    'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
+  };
+  Future<bool> login(
       String email, String password, BuildContext context) async {
-    final url = Uri.parse('http://10.0.2.2:6004/api/login');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-    };
+    final api = Uri.parse('$url/api/login');
     final body = jsonEncode({
       "user_email": email,
       "user_password": password,
     });
     try {
-      var response = await http.post(url, headers: header, body: body);
+      var response = await http.post(api, headers: header, body: body);
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body.toString());
         final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -66,7 +66,7 @@ class AuthService {
     return false; // Add this line
   }
 
-  static Future<void> logout(context) async {
+  Future<void> logout(context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     Navigator.of(context)
@@ -74,14 +74,8 @@ class AuthService {
     await prefs.setBool('loggedIn', false);
   }
 
-  static Future<void> signUp(
-      firstName, lastName, email, password, context) async {
-    final url = Uri.parse('http://10.0.2.2:6004/api/create_user');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-    };
+  Future<void> signUp(firstName, lastName, email, password, context) async {
+    final api = Uri.parse('$url/api/create_user');
     final body = jsonEncode({
       "user_email": email,
       "user_password": password,
@@ -89,7 +83,7 @@ class AuthService {
       "user_lname": lastName,
     });
     try {
-      var response = await http.post(url, headers: header, body: body);
+      var response = await http.post(api, headers: header, body: body);
       if (response.statusCode == 200) {
         Navigator.of(context).pushNamed(loginRoutes);
       } else {

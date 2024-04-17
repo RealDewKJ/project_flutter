@@ -1,11 +1,14 @@
-import 'dart:convert';
-import 'package:intl/intl.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/components/todo_card.dart';
 import 'package:project_flutter_dew/constant/routes.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
+import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
@@ -17,7 +20,9 @@ class TodoScreen extends StatefulWidget {
 }
 
 class _TodoScreenState extends State<TodoScreen> {
+  late final TextEditingController _search;
   late Future<List<Todo>> todos = Future.value([]);
+  late Future<List<Todo>> searchTodos = Future.value([]);
   String? readFirstname;
   String? firstCharFirstName;
   String? readLastname;
@@ -28,35 +33,42 @@ class _TodoScreenState extends State<TodoScreen> {
   @override
   void initState() {
     super.initState();
+    _search = TextEditingController();
     _readUserData();
   }
 
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
   Future<List<Todo>> _getTodos(int userId) async {
-    final headers = {
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-      'Content-Type': 'application/json',
-    };
-    final response = await http.get(
-        Uri.parse('http://10.0.2.2:6004/api/todo_list/$userId'),
-        headers: headers);
-    if (response.statusCode == 200) {
-      final todoData = jsonDecode(response.body) as List<dynamic>;
-      devtools.log(todoData.toString());
-      return todoData.map((item) {
-        DateTime dateTime = DateTime.parse(item['user_todo_list_last_update']);
-        String formattedDate =
-            DateFormat('hh:mm a - dd/MM/yy').format(dateTime);
-        return Todo(
-          title: item['user_todo_list_title'],
-          content: item['user_todo_list_desc'],
-          date: formattedDate,
-          id: item['user_todo_list_id'],
-          isCompleted: item['user_todo_list_completed'],
-        );
-      }).toList();
+    return await TodoService().fetchTodos(userId);
+  }
+
+  Future<void> deleteById(id) async {
+    final res = await TodoService().deleteTodo(id);
+    if (res.statusCode == 200) {
+      final updatedTodos =
+          (await todos).where((todo) => todo.id != id).toList();
+      setState(() {
+        todos = Future.value(updatedTodos);
+        searchTodos = todos;
+      });
+      showSuccessMessage("Deleted Successful");
     } else {
-      throw Exception('Failed to fetch todos');
+      showErrorMessage("Failed to delete");
     }
+  }
+
+  void showSuccessMessage(String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void showErrorMessage(String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> _readUserData() async {
@@ -73,8 +85,22 @@ class _TodoScreenState extends State<TodoScreen> {
     if (readUserId != null) {
       setState(() {
         todos = _getTodos(readUserId!);
+        searchTodos = todos;
       });
     }
+  }
+
+  Future<void> search(String keyword) async {
+    devtools.log(keyword.trim());
+    if (keyword.isEmpty) {
+      searchTodos = todos;
+    }
+    final filteredRes = (await searchTodos)
+        .where((todo) => todo.title.contains(keyword))
+        .toList();
+    setState(() {
+      searchTodos = Future.value(filteredRes);
+    });
   }
 
   @override
@@ -146,44 +172,94 @@ class _TodoScreenState extends State<TodoScreen> {
         ),
       ),
       body: Container(
-        child: SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: HexColor("#D9D9D9").withOpacity(0.09),
+        child: Column(
+          children: [
+            Padding(
+                padding: const EdgeInsets.only(top: 29.0, bottom: 20.0),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 18),
+                    child: Material(
+                      elevation: 1,
+                      borderRadius: BorderRadius.circular(15),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: TextFormField(
+                          onChanged: search,
+                          maxLines: 1,
+                          controller: _search,
+                          keyboardType: TextInputType.emailAddress,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            icon: Icon(Icons.search),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide:
+                                  const BorderSide(color: Colors.transparent),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide:
+                                  const BorderSide(color: Colors.transparent),
+                            ),
+                            fillColor: (HexColor("#FFFFFF").withOpacity(0.6)),
+                            filled: true,
+                            hintText: "Search.......",
+                            hintStyle: TextStyle(
+                              fontFamily: 'Outfit',
+                              fontWeight: FontWeight.w500,
+                              color: HexColor("#AEAEB2"),
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )),
+            Expanded(
+              child: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: HexColor("#D9D9D9").withOpacity(0.09),
+                  ),
+                  child: FutureBuilder<List<Todo>>(
+                    future: searchTodos,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.done) {
+                        List<Todo>? searchTodos = snapshot.data;
+                        if (searchTodos != null) {
+                          return ListView.builder(
+                            itemCount: searchTodos.length,
+                            itemBuilder: (context, index) {
+                              Todo todo = searchTodos[index];
+                              return TodoCard(
+                                title: todo.title,
+                                content: todo.content,
+                                date: todo.date,
+                                isCompleted:
+                                    todo.isCompleted == "true" ? true : false,
+                                id: todo.id,
+                                deleteCallback: deleteById,
+                              );
+                            },
+                          );
+                        }
+                      } else if (snapshot.hasError) {
+                        return Text('${snapshot.error}');
+                      }
+                      return const CircularProgressIndicator();
+                    },
+                  ),
+                ),
+              ),
             ),
-            child: FutureBuilder<List<Todo>>(
-              future: todos,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasData &&
-                    snapshot.connectionState == ConnectionState.done) {
-                  List<Todo>? todos = snapshot.data;
-                  if (todos != null) {
-                    return ListView.builder(
-                      itemCount: todos.length,
-                      itemBuilder: (context, index) {
-                        Todo todo = todos[index];
-                        return TodoCard(
-                          title: todo.title,
-                          content: todo.content,
-                          date: todo.date,
-                          isCompleted:
-                              todo.isCompleted == "true" ? true : false,
-                          id: todo.id,
-                        );
-                      },
-                    );
-                  }
-                } else if (snapshot.hasError) {
-                  return Text('${snapshot.error}');
-                }
-                return const CircularProgressIndicator();
-              },
-            ),
-          ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -282,7 +358,11 @@ Future _displayBottomSheet(BuildContext context) {
                           ),
                           Container(
                               padding: const EdgeInsets.only(left: 236),
-                              child: const Icon(Icons.chevron_right)),
+                              child: const Image(
+                                image: Svg("assets/images/Arrow.svg"),
+                                height: 24,
+                                width: 24,
+                              )),
                         ],
                       ),
                     ),
@@ -294,5 +374,5 @@ Future _displayBottomSheet(BuildContext context) {
 }
 
 signOut(context) async {
-  await AuthService.logout(context);
+  await AuthService().logout(context);
 }
