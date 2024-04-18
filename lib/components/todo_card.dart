@@ -3,12 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
-import 'package:http/http.dart' as http;
-import 'package:project_flutter_dew/constant/routes.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
-import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as devtools show log;
 
 class TodoCard extends StatefulWidget {
@@ -34,7 +30,7 @@ class TodoCard extends StatefulWidget {
 
 class _TodoCardState extends State<TodoCard> {
   void updateItemStatus(TodoCard widget, bool value) async {
-    final res = await TodoService().updateTodo(widget, value);
+    final res = await TodoService().updateTodoStatus(widget, value);
     if (res.statusCode == 200) {
       setState(() {
         widget.isCompleted = value;
@@ -49,7 +45,6 @@ class _TodoCardState extends State<TodoCard> {
     return Container(
       padding: const EdgeInsets.only(top: 10, left: 21, right: 17),
       child: SizedBox(
-        height: 130,
         width: 390,
         child: DecoratedBox(
           decoration: BoxDecoration(
@@ -68,7 +63,7 @@ class _TodoCardState extends State<TodoCard> {
             children: [
               Container(
                 alignment: Alignment.topLeft,
-                padding: const EdgeInsets.only(top: 23, left: 10),
+                padding: const EdgeInsets.only(top: 23, left: 10, bottom: 15),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -76,9 +71,9 @@ class _TodoCardState extends State<TodoCard> {
                       width: 20,
                       height: 20,
                       child: Checkbox(
-                        checkColor: HexColor("FFFFFF"),
+                        checkColor: HexColor('FFFFFF'),
                         shape: const CircleBorder(),
-                        activeColor: HexColor("#1DC9A0"),
+                        activeColor: HexColor('#1DC9A0'),
                         value: widget.isCompleted,
                         onChanged: (bool? value) {
                           updateItemStatus(widget, value!);
@@ -87,7 +82,7 @@ class _TodoCardState extends State<TodoCard> {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
+                        padding: const EdgeInsets.only(left: 10.0, right: 30.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -97,7 +92,7 @@ class _TodoCardState extends State<TodoCard> {
                                 fontSize: 20,
                                 fontFamily: 'outfit',
                                 fontWeight: FontWeight.w500,
-                                color: HexColor("#0D7A5C"),
+                                color: HexColor('#0D7A5C'),
                               ),
                             ),
                             Text(
@@ -106,26 +101,26 @@ class _TodoCardState extends State<TodoCard> {
                                 fontFamily: 'outfit',
                                 fontWeight: FontWeight.w500,
                                 fontSize: 12,
-                                color: HexColor("#D9D9D9"),
+                                color: HexColor('#D9D9D9'),
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 11.0),
-                                child: Text(
-                                  widget.content,
-                                  maxLines: 3,
-                                  style: TextStyle(
-                                    fontFamily: 'outfit',
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 12,
-                                    color:
-                                        HexColor("#666161").withOpacity(0.68),
-                                  ),
+                            //         Expanded(
+                            //           child:
+                            Padding(
+                              padding: const EdgeInsets.only(right: 11.0),
+                              child: Text(
+                                widget.content,
+                                maxLines: 3,
+                                style: TextStyle(
+                                  fontFamily: 'outfit',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 12,
+                                  color: HexColor('#666161').withOpacity(0.68),
                                 ),
                               ),
-                            )
+                            ),
+                            //         )
                           ],
                         ),
                       ),
@@ -171,26 +166,26 @@ Future _displayBottomSheet(BuildContext context, widget) {
                   height: 18,
                 ),
                 const ImageIcon(
-                  AssetImage("assets/images/signoutIcon.png"),
+                  AssetImage('assets/images/signoutIcon.png'),
+                  size: 40,
+                  color: Colors.grey,
                 ),
                 const SizedBox(
                   height: 56,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
+                  padding: const EdgeInsets.only(left: 46.0, right: 37),
                   child: GestureDetector(
                     onTap: () {
                       Navigator.of(context).pop();
-                      // Navigator.of(context)
-                      //     .pushNamed(editTodoRoutes, arguments: widget);
                       navigateToEditPage(context, widget);
                     },
                     child: Container(
-                      color: HexColor("#D9D9D9").withOpacity(0.00),
+                      color: HexColor('#D9D9D9').withOpacity(0.00),
                       child: Row(
                         children: [
                           const Image(
-                            image: Svg("assets/images/IconEdit.svg"),
+                            image: Svg('assets/images/IconEdit.svg'),
                             height: 24,
                             width: 24,
                           ),
@@ -202,37 +197,41 @@ Future _displayBottomSheet(BuildContext context, widget) {
                                   fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
-                                  color: HexColor("#0D7A5C")),
+                                  color: HexColor('#0D7A5C')),
                             ),
                           ),
+                          const Spacer(),
                           Container(
-                              padding: const EdgeInsets.only(left: 261),
                               child: const Image(
-                                image: Svg("assets/images/Arrow.svg"),
-                                height: 24,
-                                width: 24,
-                              )),
+                            image: Svg('assets/images/Arrow.svg'),
+                            height: 24,
+                            width: 24,
+                          )),
                         ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 40,
+                Divider(
+                  height: 50,
+                  indent: 20,
+                  thickness: 2,
+                  endIndent: 20,
+                  color: HexColor('#D9D9D9').withOpacity(0.30),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
+                  padding: const EdgeInsets.only(left: 46.0, right: 37),
                   child: GestureDetector(
                     onTap: () {
                       widget.deleteCallback(widget.id);
                       Navigator.of(context).pop();
                     },
                     child: Container(
-                      color: HexColor("#D9D9D9").withOpacity(0.00),
+                      color: HexColor('#D9D9D9').withOpacity(0.00),
                       child: Row(
                         children: [
                           const Image(
-                            image: Svg("assets/images/IconTrash.svg"),
+                            image: Svg('assets/images/IconTrash.svg'),
                             height: 24,
                             width: 24,
                           ),
@@ -244,16 +243,16 @@ Future _displayBottomSheet(BuildContext context, widget) {
                                   fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
-                                  color: HexColor("#0D7A5C")),
+                                  color: HexColor('#0D7A5C')),
                             ),
                           ),
+                          const Spacer(),
                           Container(
-                              padding: const EdgeInsets.only(left: 243),
                               child: const Image(
-                                image: Svg("assets/images/Arrow.svg"),
-                                height: 24,
-                                width: 24,
-                              )),
+                            image: Svg('assets/images/Arrow.svg'),
+                            height: 24,
+                            width: 24,
+                          )),
                         ],
                       ),
                     ),

@@ -4,7 +4,7 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -66,21 +66,12 @@ class _SignupScreenState extends State<SignupScreen> {
                       onTap: () => Navigator.of(context)
                           .pushNamedAndRemoveUntil(
                               loginRoutes, (route) => false),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: HexColor("#3CB189").withOpacity(0.4),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back_sharp,
-                          color: HexColor("#3CB189"),
-                          size: 35,
-                        ),
-                      ),
+                      child:
+                          Image(image: Svg("assets/images/IconArrowleft.svg")),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.only(left: 105),
+                    padding: const EdgeInsets.only(left: 30),
                     child: Text(
                       'SIGN UP',
                       style: TextStyle(

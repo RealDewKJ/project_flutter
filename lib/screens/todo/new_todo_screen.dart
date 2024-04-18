@@ -1,13 +1,17 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:http/http.dart' as http;
 import 'package:project_flutter_dew/components/todo_card.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
+import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
+import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,82 +56,69 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
   void addTodo(String title, String description, isCompleted) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
-    if (title.isEmpty || description.isEmpty) {
-      return showErrorMessage('Please enter title and description');
+    if (title.trim() == '' || description.trim() == '') {
+      return showErrorMessage(context,
+          message: 'Please enter title and description');
     }
-    final url = Uri.parse('http://10.0.2.2:6004/api/create_todo');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
+    final data = {
+      title: title,
+      description: description,
+      isCompleted: isCompleted,
+      userId: userId
     };
-    final body = jsonEncode({
-      "user_todo_list_title": title,
-      "user_todo_list_desc": description,
-      "user_todo_list_completed": isCompleted,
-      "user_todo_type_id": 1,
-      "user_id": userId
-    });
-    try {
-      var response = await http.post(url, headers: header, body: body);
-      if (response.body == 'OK') {
-        showSuccessMessage('Create Successful');
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
-      } else {
-        showErrorMessage("Failed to Creation");
-      }
-    } catch (e) {
-      devtools.log(e.toString());
+    var res =
+        await TodoService().createTodo(title, description, isCompleted, userId);
+    if (res == 200) {
+      showSuccessMessage(context, message: 'Create Successful');
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
+    } else {
+      showErrorMessage(context, message: 'Failed to Creation');
     }
   }
 
-  void updateTodo(String title, description, isCompleted) async {
+  void updateTodo(String title, String description, isCompleted) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
     final todoId = widget.todo!.id;
-    final url = Uri.parse('http://10.0.2.2:6004/api/update_todo');
-    final header = {
-      "Content-type": "application/json",
-      'Accept': 'application/json',
-      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-    };
-    final body = jsonEncode({
-      "user_todo_list_id": todoId,
-      "user_todo_list_title": title,
-      "user_todo_list_desc": description,
-      "user_todo_list_completed": isCompleted,
-      "user_todo_type_id": 1,
-      "user_id": userId
-    });
-    try {
-      var response = await http.post(url, headers: header, body: body);
-      if (response.body == 'OK') {
-        showSuccessMessage('Updated Successful');
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
-      } else {
-        showErrorMessage("Failed to Update");
-      }
-    } catch (e) {
-      devtools.log(e.toString());
+    if (title.trim() == '' || description.trim() == '') {
+      return showErrorMessage(context,
+          message: 'Please enter title and description');
     }
-  }
-
-  void showSuccessMessage(String message) {
-    final snackBar = SnackBar(content: Text(message));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
-
-  void showErrorMessage(String message) {
-    final snackBar = SnackBar(content: Text(message));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    final data = {
+      todoId: todoId,
+      title: title,
+      description: description,
+      isCompleted: isCompleted,
+      userId: userId
+    };
+    var res = await TodoService()
+        .updateTodo(todoId, title, description, isCompleted, userId);
+    if (res == 200) {
+      showSuccessMessage(context, message: 'Updated Successful');
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
+    } else {
+      showErrorMessage(context, message: 'Failed to Update');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.of(context).pop();
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(left: 21.0),
+            child: Image(
+              image: Svg("assets/images/IconArrowleft.svg"),
+              color: Colors.white,
+            ),
+          ),
+        ),
         title: Text(
           isEdit ? 'Your Todo' : 'Add Your Todo',
           style: const TextStyle(
@@ -143,8 +134,8 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: <Color>[
-                HexColor("#4CC599"),
-                HexColor("#0D7A5C"),
+                HexColor('#4CC599'),
+                HexColor('#0D7A5C'),
               ],
             ),
           ),
@@ -152,7 +143,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          color: HexColor("#D9D9D9").withOpacity(0.09),
+          color: HexColor('#D9D9D9').withOpacity(0.09),
         ),
         child: Container(
           padding: const EdgeInsets.only(top: 10),
@@ -160,25 +151,25 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
             child: Column(
               children: [
                 InputForm(
-                  title: "Title",
+                  title: 'Title',
                   value: _title,
                   obscureText: false,
                   leftPadding: 21,
                   rightPadding: 18,
                   maxLines: 1,
-                  colorInput: HexColor("#FFFFFF"),
+                  colorInput: HexColor('#FFFFFF'),
                 ),
                 const SizedBox(
                   height: 10,
                 ),
                 InputForm(
-                  title: "Description",
+                  title: 'Description',
                   value: _description,
                   obscureText: false,
                   leftPadding: 21,
                   rightPadding: 18,
                   maxLines: 6,
-                  colorInput: HexColor("#FFFFFF"),
+                  colorInput: HexColor('#FFFFFF'),
                 ),
                 Padding(
                   padding:
@@ -199,28 +190,26 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                         ],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 19),
+                        padding: const EdgeInsets.only(left: 19.0, right: 21.0),
                         child: Row(
                           children: [
                             Text(
-                              "Success",
+                              'Success',
                               style: TextStyle(
-                                  color: HexColor("#0D7A5C"),
+                                  color: HexColor('#0D7A5C'),
                                   fontFamily: 'outfit',
                                   fontWeight: FontWeight.w500,
                                   fontSize: 16),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 230.0),
-                              child: Switch(
-                                value: isCompleted,
-                                activeColor: Colors.green,
-                                onChanged: (bool value) {
-                                  setState(() {
-                                    isCompleted = value;
-                                  });
-                                },
-                              ),
+                            const Spacer(),
+                            CupertinoSwitch(
+                              value: isCompleted,
+                              activeColor: Colors.green,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  isCompleted = value;
+                                });
+                              },
                             ),
                           ],
                         ),
@@ -228,8 +217,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                     ),
                   ),
                 ),
-                // Padding bottom
-
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -239,9 +226,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                         child: SizedBox(
                           height: 70,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal:
-                                    21), // Set padding for left and right
+                            padding: const EdgeInsets.symmetric(horizontal: 21),
                             child: GradientElevatedButton(
                               onPressed: () {
                                 isEdit
@@ -259,8 +244,8 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                               style: GradientElevatedButton.styleFrom(
                                 gradient: LinearGradient(
                                   colors: [
-                                    HexColor("#53CD9F"),
-                                    HexColor("#0D7A5C"),
+                                    HexColor('#53CD9F'),
+                                    HexColor('#0D7A5C'),
                                   ],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
@@ -272,7 +257,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                               child: const SizedBox(
                                 width: double.infinity,
                                 child: Text(
-                                  "Save",
+                                  'Save',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontFamily: 'Outfit',

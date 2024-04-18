@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
-import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/components/todo_card.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
+import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
@@ -55,20 +55,10 @@ class _TodoScreenState extends State<TodoScreen> {
         todos = Future.value(updatedTodos);
         searchTodos = todos;
       });
-      showSuccessMessage("Deleted Successful");
+      showSuccessMessage(context, message: 'Deleted Successful');
     } else {
-      showErrorMessage("Failed to delete");
+      showErrorMessage(context, message: 'Failed to delete');
     }
-  }
-
-  void showSuccessMessage(String message) {
-    final snackBar = SnackBar(content: Text(message));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
-
-  void showErrorMessage(String message) {
-    final snackBar = SnackBar(content: Text(message));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> _readUserData() async {
@@ -91,13 +81,11 @@ class _TodoScreenState extends State<TodoScreen> {
   }
 
   Future<void> search(String keyword) async {
-    devtools.log(keyword.trim());
     if (keyword.isEmpty) {
       searchTodos = todos;
     }
-    final filteredRes = (await searchTodos)
-        .where((todo) => todo.title.contains(keyword))
-        .toList();
+    final filteredRes =
+        (await todos).where((todo) => todo.title.contains(keyword)).toList();
     setState(() {
       searchTodos = Future.value(filteredRes);
     });
@@ -121,7 +109,7 @@ class _TodoScreenState extends State<TodoScreen> {
                       fontFamily: 'outfit',
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
-                      color: HexColor("#53CD9F")),
+                      color: HexColor('#53CD9F')),
                 ),
               ),
             ),
@@ -202,13 +190,13 @@ class _TodoScreenState extends State<TodoScreen> {
                               borderSide:
                                   const BorderSide(color: Colors.transparent),
                             ),
-                            fillColor: (HexColor("#FFFFFF").withOpacity(0.6)),
+                            fillColor: (HexColor('#FFFFFF').withOpacity(0.6)),
                             filled: true,
-                            hintText: "Search.......",
+                            hintText: 'Search.......',
                             hintStyle: TextStyle(
                               fontFamily: 'Outfit',
                               fontWeight: FontWeight.w500,
-                              color: HexColor("#AEAEB2"),
+                              color: HexColor('#AEAEB2'),
                               fontSize: 15,
                             ),
                           ),
@@ -223,7 +211,7 @@ class _TodoScreenState extends State<TodoScreen> {
                 height: double.infinity,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: HexColor("#D9D9D9").withOpacity(0.09),
+                    color: HexColor('#D9D9D9').withOpacity(0.09),
                   ),
                   child: FutureBuilder<List<Todo>>(
                     future: searchTodos,
@@ -243,7 +231,7 @@ class _TodoScreenState extends State<TodoScreen> {
                                 content: todo.content,
                                 date: todo.date,
                                 isCompleted:
-                                    todo.isCompleted == "true" ? true : false,
+                                    todo.isCompleted == 'true' ? true : false,
                                 id: todo.id,
                                 deleteCallback: deleteById,
                               );
@@ -263,13 +251,18 @@ class _TodoScreenState extends State<TodoScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: HexColor("#0D7A5C"),
+        backgroundColor: HexColor('#0D7A5C'),
         onPressed: () async {
           Navigator.of(context).pushNamed(newTodoRoutes);
         },
         shape: const CircleBorder(),
         tooltip: 'Increment',
-        child: const ImageIcon(AssetImage("assets/images/calendar.png")),
+        child: const ImageIcon(
+          AssetImage(
+            'assets/images/calendar.png',
+          ),
+          size: 35,
+        ),
       ),
     );
   }
@@ -290,32 +283,31 @@ Future _displayBottomSheet(BuildContext context) {
             child: Column(
               children: <Widget>[
                 const SizedBox(
-                  height: 18,
+                  height: 10,
                 ),
                 const ImageIcon(
-                  AssetImage("assets/images/signoutIcon.png"),
-                ),
-                const SizedBox(
-                  height: 23,
+                  AssetImage('assets/images/signoutIcon.png'),
+                  size: 40,
+                  color: Colors.grey,
                 ),
                 Text(
-                  "SIGN OUT",
+                  'SIGN OUT',
                   style: TextStyle(
                       fontFamily: 'outfit',
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
-                      color: HexColor("#473B1E")),
+                      color: HexColor('#473B1E')),
                 ),
                 const SizedBox(
                   height: 19,
                 ),
                 Text(
-                  "Do you want to log out?",
+                  'Do you want to log out?',
                   style: TextStyle(
                       fontFamily: 'outfit',
                       fontSize: 16,
                       fontWeight: FontWeight.w400,
-                      color: HexColor("#473B1E")),
+                      color: HexColor('#473B1E')),
                 ),
                 const SizedBox(
                   height: 59,
@@ -327,46 +319,53 @@ Future _displayBottomSheet(BuildContext context) {
                       signOut(context);
                     },
                     child: Container(
-                      color: HexColor("#D9D9D9").withOpacity(0.00),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 25,
-                            height: 25,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: HexColor("#3CB189").withOpacity(0.4),
-                              ),
-                              child: Icon(
-                                Icons.arrow_back_sharp,
-                                color: HexColor("#3CB189"),
-                                size: 15,
-                              ),
+                      color: HexColor('#D9D9D9').withOpacity(0.00),
+                      child: Center(
+                        child: SizedBox(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.only(left: 20.0, right: 20.0),
+                            child: Row(
+                              children: [
+                                Container(
+                                  child: const Image(
+                                    image: Svg('assets/images/IconLogout.svg'),
+                                    height: 24,
+                                    width: 24,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.only(left: 7),
+                                  child: Text(
+                                    'Signout',
+                                    style: TextStyle(
+                                        fontFamily: 'Outfit',
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 16,
+                                        color: HexColor('#0D7A5C')),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                    child: const Image(
+                                  image: Svg('assets/images/Arrow.svg'),
+                                  height: 24,
+                                  width: 24,
+                                )),
+                              ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.only(left: 7),
-                            child: Text(
-                              'Signout',
-                              style: TextStyle(
-                                  fontFamily: 'Outfit',
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 16,
-                                  color: HexColor("#0D7A5C")),
-                            ),
-                          ),
-                          Container(
-                              padding: const EdgeInsets.only(left: 236),
-                              child: const Image(
-                                image: Svg("assets/images/Arrow.svg"),
-                                height: 24,
-                                width: 24,
-                              )),
-                        ],
+                        ),
                       ),
                     ),
                   ),
+                ),
+                Divider(
+                  height: 21,
+                  indent: 40,
+                  thickness: 2,
+                  endIndent: 35,
+                  color: HexColor('#D9D9D9').withOpacity(0.30),
                 ),
               ],
             ),

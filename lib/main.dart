@@ -2,11 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/screens/auth/login_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project_flutter_dew/screens/auth/signup_screen.dart';
-import 'package:project_flutter_dew/screens/todo/edit_todo_screen.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
 import 'package:project_flutter_dew/screens/todo/todo_screen.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
@@ -31,7 +30,12 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: false,
-          textTheme: GoogleFonts.outfitTextTheme(),
+          fontFamily: 'outfit',
+          // colorScheme: ColorScheme.fromSeed(
+          //     seedColor: Colors.white,
+          //     primary: Colors.white,
+          //     secondary: Colors.white),
+          // textTheme: GoogleFonts.outfitTextTheme(),
         ),
         home: isFirstLaunch ? const TodoScreen() : const LoginScreen(),
         routes: {

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,16 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage("assets/images/signup.png"),
-                  fit: BoxFit.cover,
-                ),
+      body: SingleChildScrollView(
+        child: Expanded(
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/images/signup.png"),
+                fit: BoxFit.cover,
               ),
+            ),
+            child: SizedBox(
+              width: double.infinity,
               child: Column(
                 children: [
                   const SizedBox(
@@ -128,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(
-                    height: 76,
+                    height: 100,
                   ),
                   SizedBox(
                     width: 339,
@@ -199,8 +200,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 }

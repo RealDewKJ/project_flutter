@@ -1,20 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:project_flutter_dew/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/routes.dart';
+import 'package:project_flutter_dew/shared/constant/variables.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
 
 class AuthService {
-  String url = 'http://10.0.2.2:6004';
-  final header = {
-    "Content-type": "application/json",
-    'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
-  };
+  String url = api_url;
+  final header = api_header;
   Future<bool> login(
       String email, String password, BuildContext context) async {
-    final api = Uri.parse('$url/api/login');
+    final api = Uri.parse('$url/login');
     final body = jsonEncode({
       "user_email": email,
       "user_password": password,
@@ -57,13 +55,13 @@ class AuthService {
                         child: const Text("OK"))
                   ],
                 ));
-        return false; // Add this line
+        return false;
       }
     } catch (e) {
       devtools.log(e.toString());
       rethrow;
     }
-    return false; // Add this line
+    return false;
   }
 
   Future<void> logout(context) async {
@@ -75,7 +73,7 @@ class AuthService {
   }
 
   Future<void> signUp(firstName, lastName, email, password, context) async {
-    final api = Uri.parse('$url/api/create_user');
+    final api = Uri.parse('$url/create_user');
     final body = jsonEncode({
       "user_email": email,
       "user_password": password,

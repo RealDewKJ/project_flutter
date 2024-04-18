@@ -2,23 +2,24 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
 import 'package:intl/intl.dart';
+import 'package:project_flutter_dew/shared/constant/variables.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TodoService {
-  String url = 'http://10.0.2.2:6004';
+  String url = api_url;
   final header = {
     "Content-type": "application/json",
     'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
   };
   Future<List<Todo>> fetchTodos(int userId) async {
-    final response = await http.get(Uri.parse('$url/api/todo_list/$userId'),
-        headers: header);
+    final response =
+        await http.get(Uri.parse('$url/todo_list/$userId'), headers: header);
     if (response.statusCode == 200) {
-      final articleData = jsonDecode(response.body) as List<dynamic>;
-      devtools.log(articleData.toString());
-      return articleData.map((item) {
-        DateTime dateTime = DateTime.parse(item['user_todo_list_last_update']);
+      final todoData = jsonDecode(response.body) as List<dynamic>;
+      return todoData.map((item) {
+        DateTime dateTime =
+            DateTime.parse(item['user_todo_list_last_update']).toLocal();
         String formattedDate =
             DateFormat('hh:mm a - dd/MM/yy').format(dateTime);
         return Todo(
@@ -34,10 +35,10 @@ class TodoService {
     }
   }
 
-  Future<http.Response> updateTodo(dynamic todo, bool value) async {
+  Future<http.Response> updateTodoStatus(dynamic todo, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
-    final api = Uri.parse('$url/api/update_todo');
+    final api = Uri.parse('$url/update_todo');
 
     final body = jsonEncode({
       "user_todo_list_completed": value,
@@ -57,7 +58,7 @@ class TodoService {
   }
 
   Future<http.Response> deleteTodo(int id) async {
-    final api = Uri.parse('$url/api/delete_todo/$id');
+    final api = Uri.parse('$url/delete_todo/$id');
     try {
       var response = await http.delete(api, headers: header);
       return response;
@@ -67,5 +68,60 @@ class TodoService {
     }
   }
 
-  search(String title) {}
+  Future<int> createTodo(title, description, isCompleted, userId) async {
+    final api = Uri.parse('$url/create_todo');
+    final header = {
+      "Content-type": "application/json",
+      'Accept': 'application/json',
+      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
+    };
+    final body = jsonEncode({
+      "user_todo_list_title": title,
+      "user_todo_list_desc": description,
+      "user_todo_list_completed": isCompleted,
+      "user_todo_type_id": 1,
+      "user_id": userId
+    });
+    try {
+      var response = await http.post(api, headers: header, body: body);
+      if (response.body == 'OK') {
+        return response.statusCode;
+      } else {
+        return 404;
+      }
+    } catch (e) {
+      devtools.log(e.toString());
+      return throw Exception('Error creating todo');
+    }
+  }
+
+  Future<int> updateTodo(
+      todoId, title, description, isCompleted, userId) async {
+    final api = Uri.parse('$url/update_todo');
+    final header = {
+      "Content-type": "application/json",
+      'Accept': 'application/json',
+      'Authorization': 'Bearer 950b88051dc87fe3fcb0b4df25eee676',
+    };
+    final body = jsonEncode({
+      "user_todo_list_id": todoId,
+      "user_todo_list_title": title,
+      "user_todo_list_desc": description,
+      "user_todo_list_completed": isCompleted,
+      "user_todo_type_id": 1,
+      "user_id": userId
+    });
+    try {
+      var response = await http.post(api, headers: header, body: body);
+      devtools.log(response.body.toString());
+      if (response.body.toString() == 'OK') {
+        return response.statusCode;
+      } else {
+        return 404;
+      }
+    } catch (e) {
+      devtools.log(e.toString());
+      return throw Exception('Error updated todo');
+    }
+  }
 }
