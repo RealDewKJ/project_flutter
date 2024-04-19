@@ -265,57 +265,53 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-        //       ),
-        //     ],
-        //   ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 19.0, left: 18, right: 21),
-        child: SizedBox(
-          height: 70,
-          child: GradientElevatedButton(
-            onPressed: () {
-              isEdit
-                  ? updateTodo(
-                      _title.text.toString(),
-                      _description.text.toString(),
-                      isCompleted.toString(),
-                    )
-                  : addTodo(
-                      _title.text.toString(),
-                      _description.text.toString(),
-                      isCompleted.toString(),
-                    );
-            },
-            style: GradientElevatedButton.styleFrom(
-              gradient: LinearGradient(
-                colors: [
-                  HexColor('#53CD9F'),
-                  HexColor('#0D7A5C'),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-            ),
-            child: const SizedBox(
-              width: double.infinity,
-              child: Text(
-                'Save',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
+                Padding(
+                  padding: const EdgeInsets.only(top: 30.0),
+                  child: SizedBox(
+                    height: 70,
+                    child: GradientElevatedButton(
+                      onPressed: () {
+                        isEdit
+                            ? updateTodo(
+                                _title.text.toString(),
+                                _description.text.toString(),
+                                isCompleted.toString(),
+                              )
+                            : addTodo(
+                                _title.text.toString(),
+                                _description.text.toString(),
+                                isCompleted.toString(),
+                              );
+                      },
+                      style: GradientElevatedButton.styleFrom(
+                        gradient: LinearGradient(
+                          colors: [
+                            HexColor('#53CD9F'),
+                            HexColor('#0D7A5C'),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                      ),
+                      child: const SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          'Save',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

@@ -27,6 +27,20 @@ class InputForm extends StatefulWidget {
 }
 
 class _InputFormState extends State<InputForm> {
+  bool _obscured = false;
+
+  void _toggleObscured() {
+    setState(() {
+      _obscured = !_obscured;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.obscureText;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -38,7 +52,7 @@ class _InputFormState extends State<InputForm> {
             maxLines: widget.maxLines,
             controller: widget.value,
             keyboardType: widget.keyboardType,
-            obscureText: widget.obscureText,
+            obscureText: _obscured,
             onChanged: widget.onValueChanged,
             textInputAction: widget.inputAction,
             decoration: InputDecoration(
@@ -59,6 +73,21 @@ class _InputFormState extends State<InputForm> {
                 color: HexColor("#666161"),
                 fontSize: 16,
               ),
+              suffixIcon: widget.obscureText
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 4, 0),
+                      child: GestureDetector(
+                        onTap: _toggleObscured,
+                        child: Icon(
+                          _obscured
+                              ? Icons.visibility_rounded
+                              : Icons.visibility_off_rounded,
+                          size: 24,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    )
+                  : null,
             ),
           ),
         ),

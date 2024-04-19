@@ -80,14 +80,11 @@ flutter:
   # https://flutter.dev/assets-and-images/#from-packages
 flutter_native_splash:
   # color: "#048c2c"
-  background_image: "assets/images/bgAll.png"
-  # image: assets/images/logo.png
-  # The color_dark, background_image_dark, image_dark, branding_dark are parameters that set the background
-  # and image when the device is in dark mode. If they are not specified, the app will use the
-  # parameters from above. If the image_dark parameter is specified, color_dark or
-  # background_image_dark must be specified.  color_dark and background_image_dark cannot both be
-  # set.
-  #color_dark: "#042a49"
+  background_image: assets/images/bgAll.png
+  color: "#FFFFFF"
+  image: assets/images/minilogo.png
+  color_dark: "#1a1a1a"
+  image_dark: assets/images/minilogo.png
   #background_image_dark: "assets/dark-background.png"
   #image_dark: assets/splash-invert.png
   #branding_dark: assets/dart_dark.png
@@ -104,7 +101,11 @@ flutter_native_splash:
     # App icon without an icon background: This should be 1152×1152 pixels, and fit within a circle
     # 768 pixels in diameter.
     # image: "assets/images/signup.png"
-    background_image: "assets/images/bgAll.png"
+    background_image: assets/images/bgAll.png
+    icon_background_color: "#FFFFFF"
+    image: assets/images/minilogo.png
+    icon_background_color_dark: "#1a1a1a"
+    image_dark: assets/images/minilogo.png
     # image: assets/images/logo.png
     # Splash screen background color.
     # color: "#42a5f5"
