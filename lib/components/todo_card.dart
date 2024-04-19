@@ -59,11 +59,23 @@ class _TodoCardState extends State<TodoCard> {
               ),
             ],
           ),
-          child: Stack(
+          child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 13.0, right: 13.0),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      _displayBottomSheet(context, widget);
+                    },
+                    child: const Icon(Icons.more_horiz),
+                  ),
+                ),
+              ),
               Container(
                 alignment: Alignment.topLeft,
-                padding: const EdgeInsets.only(top: 23, left: 10, bottom: 15),
+                padding: const EdgeInsets.only(left: 10, bottom: 15),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -105,8 +117,6 @@ class _TodoCardState extends State<TodoCard> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            //         Expanded(
-                            //           child:
                             Padding(
                               padding: const EdgeInsets.only(right: 11.0),
                               child: Text(
@@ -120,7 +130,6 @@ class _TodoCardState extends State<TodoCard> {
                                 ),
                               ),
                             ),
-                            //         )
                           ],
                         ),
                       ),
@@ -128,18 +137,6 @@ class _TodoCardState extends State<TodoCard> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 13.0, right: 13.0),
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: GestureDetector(
-                    onTap: () {
-                      _displayBottomSheet(context, widget);
-                    },
-                    child: const Icon(Icons.more_horiz),
-                  ),
-                ),
-              )
             ],
           ),
         ),
@@ -201,12 +198,11 @@ Future _displayBottomSheet(BuildContext context, widget) {
                             ),
                           ),
                           const Spacer(),
-                          Container(
-                              child: const Image(
+                          const Image(
                             image: Svg('assets/images/Arrow.svg'),
                             height: 24,
                             width: 24,
-                          )),
+                          )
                         ],
                       ),
                     ),
@@ -247,12 +243,11 @@ Future _displayBottomSheet(BuildContext context, widget) {
                             ),
                           ),
                           const Spacer(),
-                          Container(
-                              child: const Image(
+                          const Image(
                             image: Svg('assets/images/Arrow.svg'),
                             height: 24,
                             width: 24,
-                          )),
+                          )
                         ],
                       ),
                     ),

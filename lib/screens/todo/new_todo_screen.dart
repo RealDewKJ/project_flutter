@@ -29,6 +29,8 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
   late final TextEditingController _description;
   bool isCompleted = false;
   bool isEdit = false;
+  String? _titleError;
+  String? _descriptionError;
 
   @override
   void initState() {
@@ -53,19 +55,42 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
     super.dispose();
   }
 
+  bool _validateTitle(String? title) {
+    if (title == null || title.isEmpty) {
+      setState(() {
+        _titleError = 'Please Enter Title';
+      });
+      return false;
+    }
+    setState(() {
+      _titleError = null;
+    });
+    return true;
+  }
+
+  bool _validateDescription(String? description) {
+    if (description == null || description.isEmpty) {
+      setState(() {
+        _descriptionError = 'Please Enter Description';
+      });
+      return false;
+    }
+    setState(() {
+      _descriptionError = null;
+    });
+    return true;
+  }
+
   void addTodo(String title, String description, isCompleted) async {
+    _validateTitle(title);
+    _validateDescription(description);
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
     if (title.trim() == '' || description.trim() == '') {
       return showErrorMessage(context,
           message: 'Please enter title and description');
     }
-    final data = {
-      title: title,
-      description: description,
-      isCompleted: isCompleted,
-      userId: userId
-    };
+
     var res =
         await TodoService().createTodo(title, description, isCompleted, userId);
     if (res == 200) {
@@ -85,13 +110,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       return showErrorMessage(context,
           message: 'Please enter title and description');
     }
-    final data = {
-      todoId: todoId,
-      title: title,
-      description: description,
-      isCompleted: isCompleted,
-      userId: userId
-    };
+
     var res = await TodoService()
         .updateTodo(todoId, title, description, isCompleted, userId);
     if (res == 200) {
@@ -111,8 +130,8 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
           onTap: () {
             Navigator.of(context).pop();
           },
-          child: Padding(
-            padding: const EdgeInsets.only(left: 21.0),
+          child: const Padding(
+            padding: EdgeInsets.only(left: 21.0),
             child: Image(
               image: Svg("assets/images/IconArrowleft.svg"),
               color: Colors.white,
@@ -141,24 +160,40 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
           ),
         ),
       ),
-      body: Container(
+      body:
+          // Expanded(
+          //   child: ListView(
+          //     children: [
+          Container(
         decoration: BoxDecoration(
           color: HexColor('#D9D9D9').withOpacity(0.09),
         ),
         child: Container(
-          padding: const EdgeInsets.only(top: 10),
+          padding: const EdgeInsets.only(top: 10, left: 21, right: 17),
           child: Form(
-            child: Column(
+            child: ListView(
               children: [
                 InputForm(
                   title: 'Title',
                   value: _title,
                   obscureText: false,
-                  leftPadding: 21,
-                  rightPadding: 18,
                   maxLines: 1,
                   colorInput: HexColor('#FFFFFF'),
+                  onValueChanged: _validateTitle,
+                  keyboardType: TextInputType.name,
+                  inputAction: TextInputAction.next,
                 ),
+                if (_titleError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(_titleError!,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
                 const SizedBox(
                   height: 10,
                 ),
@@ -166,14 +201,27 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                   title: 'Description',
                   value: _description,
                   obscureText: false,
-                  leftPadding: 21,
-                  rightPadding: 18,
                   maxLines: 6,
                   colorInput: HexColor('#FFFFFF'),
+                  onValueChanged: _validateDescription,
+                  keyboardType: TextInputType.name,
+                  inputAction: TextInputAction.done,
                 ),
+                if (_descriptionError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(_descriptionError!,
+                            style: const TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
                 Padding(
-                  padding:
-                      const EdgeInsets.only(top: 10.0, left: 21, right: 18),
+                  padding: const EdgeInsets.only(
+                    top: 10.0,
+                  ),
                   child: SizedBox(
                     height: 59,
                     child: Container(
@@ -217,63 +265,57 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 19.0),
-                        child: SizedBox(
-                          height: 70,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 21),
-                            child: GradientElevatedButton(
-                              onPressed: () {
-                                isEdit
-                                    ? updateTodo(
-                                        _title.text.toString(),
-                                        _description.text.toString(),
-                                        isCompleted.toString(),
-                                      )
-                                    : addTodo(
-                                        _title.text.toString(),
-                                        _description.text.toString(),
-                                        isCompleted.toString(),
-                                      );
-                              },
-                              style: GradientElevatedButton.styleFrom(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    HexColor('#53CD9F'),
-                                    HexColor('#0D7A5C'),
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
-                              ),
-                              child: const SizedBox(
-                                width: double.infinity,
-                                child: Text(
-                                  'Save',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit',
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
+            ),
+          ),
+        ),
+        //       ),
+        //     ],
+        //   ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 19.0, left: 18, right: 21),
+        child: SizedBox(
+          height: 70,
+          child: GradientElevatedButton(
+            onPressed: () {
+              isEdit
+                  ? updateTodo(
+                      _title.text.toString(),
+                      _description.text.toString(),
+                      isCompleted.toString(),
+                    )
+                  : addTodo(
+                      _title.text.toString(),
+                      _description.text.toString(),
+                      isCompleted.toString(),
+                    );
+            },
+            style: GradientElevatedButton.styleFrom(
+              gradient: LinearGradient(
+                colors: [
+                  HexColor('#53CD9F'),
+                  HexColor('#0D7A5C'),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            ),
+            child: const SizedBox(
+              width: double.infinity,
+              child: Text(
+                'Save',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 20,
+                ),
+              ),
             ),
           ),
         ),

@@ -10,7 +10,6 @@ import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
 
 class TodoScreen extends StatefulWidget {
@@ -37,6 +36,7 @@ class _TodoScreenState extends State<TodoScreen> {
     _readUserData();
   }
 
+  @override
   void dispose() {
     _search.dispose();
     super.dispose();
@@ -84,8 +84,10 @@ class _TodoScreenState extends State<TodoScreen> {
     if (keyword.isEmpty) {
       searchTodos = todos;
     }
-    final filteredRes =
-        (await todos).where((todo) => todo.title.contains(keyword)).toList();
+    final filteredRes = (await todos)
+        .where(
+            (todo) => todo.title.toLowerCase().contains(keyword.toLowerCase()))
+        .toList();
     setState(() {
       searchTodos = Future.value(filteredRes);
     });
@@ -179,7 +181,7 @@ class _TodoScreenState extends State<TodoScreen> {
                           keyboardType: TextInputType.emailAddress,
                           obscureText: false,
                           decoration: InputDecoration(
-                            icon: Icon(Icons.search),
+                            icon: const Icon(Icons.search),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide:
@@ -327,12 +329,10 @@ Future _displayBottomSheet(BuildContext context) {
                                 const EdgeInsets.only(left: 20.0, right: 20.0),
                             child: Row(
                               children: [
-                                Container(
-                                  child: const Image(
-                                    image: Svg('assets/images/IconLogout.svg'),
-                                    height: 24,
-                                    width: 24,
-                                  ),
+                                const Image(
+                                  image: Svg('assets/images/IconLogout.svg'),
+                                  height: 24,
+                                  width: 24,
                                 ),
                                 Container(
                                   padding: const EdgeInsets.only(left: 7),
@@ -346,12 +346,11 @@ Future _displayBottomSheet(BuildContext context) {
                                   ),
                                 ),
                                 const Spacer(),
-                                Container(
-                                    child: const Image(
+                                const Image(
                                   image: Svg('assets/images/Arrow.svg'),
                                   height: 24,
                                   width: 24,
-                                )),
+                                )
                               ],
                             ),
                           ),

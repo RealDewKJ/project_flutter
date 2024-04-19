@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/constant/variables.dart';
+import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:developer' as devtools show log;
@@ -31,31 +32,7 @@ class AuthService {
         Navigator.of(context)
             .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
       } else {
-        showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-                  title: const Text("Login Failed"),
-                  content: const SizedBox(
-                    height: 20,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Text("Email or password is incorrect."),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("OK"))
-                  ],
-                ));
-        return false;
+        showErrorMessage(context, message: "Login Failed");
       }
     } catch (e) {
       devtools.log(e.toString());
@@ -85,7 +62,8 @@ class AuthService {
       if (response.statusCode == 200) {
         Navigator.of(context).pushNamed(loginRoutes);
       } else {
-        print('failed');
+        showDialogErrorMessage(context,
+            message: "Signup Failed", subtitle: "Please fill in all fields.");
       }
     } catch (e) {
       print(e.toString());
