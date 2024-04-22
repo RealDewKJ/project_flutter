@@ -50,7 +50,11 @@ class _InputFormState extends State<InputForm> {
           borderRadius: BorderRadius.circular(15),
           child: TextFormField(
             maxLines: widget.maxLines,
+            onTapOutside: (event) {
+              FocusScope.of(context).unfocus();
+            },
             controller: widget.value,
+            autocorrect: false,
             keyboardType: widget.keyboardType,
             obscureText: _obscured,
             onChanged: widget.onValueChanged,

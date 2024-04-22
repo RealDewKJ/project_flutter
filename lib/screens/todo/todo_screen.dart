@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/todo_card.dart';
@@ -8,6 +11,7 @@ import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
+import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as devtools show log;
@@ -28,6 +32,7 @@ class _TodoScreenState extends State<TodoScreen> {
   String? fullName;
   String? isCompleted;
   int? readUserId;
+  Timer? _timer;
 
   @override
   void initState() {
@@ -47,6 +52,7 @@ class _TodoScreenState extends State<TodoScreen> {
   }
 
   Future<void> deleteById(id) async {
+    EasyLoading.show(status: "loading...");
     final res = await TodoService().deleteTodo(id);
     if (res.statusCode == 200) {
       final updatedTodos =
@@ -55,9 +61,29 @@ class _TodoScreenState extends State<TodoScreen> {
         todos = Future.value(updatedTodos);
         searchTodos = todos;
       });
+      EasyLoading.showSuccess("Deleted Successful",
+          duration: const Duration(seconds: 2));
       showSuccessMessage(context, message: 'Deleted Successful');
     } else {
+      EasyLoading.showSuccess("Failed to delete",
+          duration: const Duration(seconds: 2));
       showErrorMessage(context, message: 'Failed to delete');
+    }
+  }
+
+  Future<void> updateStatusById(int id, bool value) async {
+    try {
+      List<Todo> todoList = await todos;
+
+      Todo todoToUpdate = todoList.firstWhere((todo) => todo.id == id);
+
+      if (todoToUpdate != null) {
+        todoToUpdate.isCompleted = value.toString();
+      } else {
+        showErrorMessage(context, message: 'Todo with ID $id not found.');
+      }
+    } catch (e) {
+      EasyLoading.showError(e.toString(), duration: const Duration(seconds: 5));
     }
   }
 
@@ -69,7 +95,7 @@ class _TodoScreenState extends State<TodoScreen> {
       readLastname = prefs.getString('user_lname');
       readUserId = prefs.getInt('user_id');
       fullName =
-          '${readFirstname?[0].toUpperCase()}${readFirstname?.substring(1)} $readLastname';
+          '${readFirstname?[0].toUpperCase()}${readFirstname?.substring(1)} ${readLastname?[0].toUpperCase()}${readLastname?.substring(1)}';
     });
 
     if (readUserId != null) {
@@ -88,6 +114,15 @@ class _TodoScreenState extends State<TodoScreen> {
         .where(
             (todo) => todo.title.toLowerCase().contains(keyword.toLowerCase()))
         .toList();
+    final mappedData = filteredRes.map((todo) {
+      return {
+        'title': todo.title,
+        'description': todo.content,
+        'isCompleted': todo.isCompleted,
+      };
+    }).toList();
+
+    devtools.log(mappedData.toString());
     setState(() {
       searchTodos = Future.value(filteredRes);
     });
@@ -95,76 +130,85 @@ class _TodoScreenState extends State<TodoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                _displayBottomSheet(context);
-              },
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Text(
-                  firstCharFirstName.toString().toUpperCase(),
-                  style: TextStyle(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) {
+        if (didPop) {
+          return;
+        }
+        HelperDialog.showBackDialog(context);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _displayBottomSheet(context);
+                },
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Text(
+                    firstCharFirstName.toString().toUpperCase(),
+                    style: TextStyle(
                       fontFamily: 'outfit',
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
-                      color: HexColor('#53CD9F')),
+                      color: HexColor('#53CD9F'),
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Hello!',
-                  style: TextStyle(
-                      fontFamily: 'outfit',
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white),
-                ),
-                Text(
-                  fullName ?? '',
-                  style: const TextStyle(
-                      fontFamily: 'outfit',
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ],
-        ),
-        toolbarHeight: 100,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: <Color>[
-                Color.fromRGBO(76, 197, 153, 1),
-                Color.fromRGBO(13, 122, 92, 1),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.25),
-                offset: Offset(0, 4),
-                blurRadius: 4,
-                spreadRadius: 0,
+              const SizedBox(width: 8.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hello!',
+                    style: TextStyle(
+                        fontFamily: 'outfit',
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white),
+                  ),
+                  Text(
+                    fullName ?? '',
+                    style: const TextStyle(
+                        fontFamily: 'outfit',
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ],
               ),
             ],
           ),
+          toolbarHeight: 100,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: <Color>[
+                  Color.fromRGBO(76, 197, 153, 1),
+                  Color.fromRGBO(13, 122, 92, 1),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Color.fromRGBO(0, 0, 0, 0.25),
+                  offset: Offset(0, 4),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-      body: Container(
-        child: Column(
-          children: [
-            Padding(
+        body: Container(
+          child: Column(
+            children: [
+              Padding(
                 padding: const EdgeInsets.only(top: 29.0, bottom: 20.0),
                 child: Center(
                   child: Padding(
@@ -176,10 +220,11 @@ class _TodoScreenState extends State<TodoScreen> {
                         padding: const EdgeInsets.only(left: 8.0),
                         child: TextFormField(
                           onChanged: search,
-                          maxLines: 1,
                           controller: _search,
-                          keyboardType: TextInputType.emailAddress,
-                          obscureText: false,
+                          keyboardType: TextInputType.name,
+                          onTapOutside: (event) {
+                            FocusScope.of(context).unfocus();
+                          },
                           decoration: InputDecoration(
                             icon: const Icon(Icons.search),
                             enabledBorder: OutlineInputBorder(
@@ -206,64 +251,90 @@ class _TodoScreenState extends State<TodoScreen> {
                       ),
                     ),
                   ),
-                )),
-            Expanded(
-              child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: HexColor('#D9D9D9').withOpacity(0.09),
-                  ),
-                  child: FutureBuilder<List<Todo>>(
-                    future: searchTodos,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasData &&
-                          snapshot.connectionState == ConnectionState.done) {
-                        List<Todo>? searchTodos = snapshot.data;
-                        if (searchTodos != null) {
-                          return ListView.builder(
-                            itemCount: searchTodos.length,
-                            itemBuilder: (context, index) {
-                              Todo todo = searchTodos[index];
-                              return TodoCard(
-                                title: todo.title,
-                                content: todo.content,
-                                date: todo.date,
-                                isCompleted:
-                                    todo.isCompleted == 'true' ? true : false,
-                                id: todo.id,
-                                deleteCallback: deleteById,
+                ),
+              ),
+              Expanded(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: HexColor('#D9D9D9').withOpacity(0.09),
+                    ),
+                    child: RefreshIndicator(
+                      color: Colors.white,
+                      backgroundColor: Colors.blue,
+                      onRefresh: () async {
+                        List<Todo> updatedTodos = await _getTodos(readUserId!);
+                        setState(() {
+                          todos = Future.value(updatedTodos);
+                          searchTodos = Future.value(updatedTodos);
+                        });
+                      },
+                      child: FutureBuilder<List<Todo>>(
+                        future: searchTodos,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasData &&
+                              snapshot.connectionState ==
+                                  ConnectionState.done) {
+                            List<Todo>? searchTodos = snapshot.data;
+                            if (searchTodos!.isNotEmpty) {
+                              return ListView.builder(
+                                itemCount: searchTodos.length,
+                                itemBuilder: (context, index) {
+                                  Todo todo = searchTodos[index];
+                                  return TodoCard(
+                                    title: todo.title,
+                                    content: todo.content,
+                                    date: todo.date,
+                                    isCompleted: todo.isCompleted == 'true'
+                                        ? true
+                                        : false,
+                                    id: todo.id,
+                                    deleteCallback: deleteById,
+                                    updateStatusCallback: updateStatusById,
+                                  );
+                                },
                               );
-                            },
-                          );
-                        }
-                      } else if (snapshot.hasError) {
-                        return Text('${snapshot.error}');
-                      }
-                      return const CircularProgressIndicator();
-                    },
+                            } else {
+                              return const Center(
+                                child: Text(
+                                  'Data Not Found.',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 20),
+                                ),
+                              );
+                            }
+                          } else if (snapshot.hasError) {
+                            return Text('${snapshot.error}');
+                          }
+                          return const CircularProgressIndicator();
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: HexColor('#0D7A5C'),
-        onPressed: () async {
-          Navigator.of(context).pushNamed(newTodoRoutes);
-        },
-        shape: const CircleBorder(),
-        tooltip: 'Increment',
-        child: const ImageIcon(
-          AssetImage(
-            'assets/images/calendar.png',
+            ],
           ),
-          size: 35,
+        ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: HexColor('#0D7A5C'),
+          onPressed: () {
+            Navigator.of(context).pushNamed(newTodoRoutes);
+          },
+          shape: const CircleBorder(),
+          tooltip: 'Increment',
+          child: const ImageIcon(
+            AssetImage(
+              'assets/images/calendar.png',
+            ),
+            size: 35,
+          ),
         ),
       ),
     );
@@ -272,105 +343,108 @@ class _TodoScreenState extends State<TodoScreen> {
 
 Future _displayBottomSheet(BuildContext context) {
   return showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(15),
-          topRight: Radius.circular(15),
-        ),
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(15),
+        topRight: Radius.circular(15),
       ),
-      builder: (context) => SizedBox(
-            height: 250,
-            width: 428,
-            child: Column(
-              children: <Widget>[
-                const SizedBox(
-                  height: 10,
-                ),
-                const ImageIcon(
-                  AssetImage('assets/images/signoutIcon.png'),
-                  size: 40,
-                  color: Colors.grey,
-                ),
-                Text(
-                  'SIGN OUT',
-                  style: TextStyle(
-                      fontFamily: 'outfit',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      color: HexColor('#473B1E')),
-                ),
-                const SizedBox(
-                  height: 19,
-                ),
-                Text(
-                  'Do you want to log out?',
-                  style: TextStyle(
-                      fontFamily: 'outfit',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: HexColor('#473B1E')),
-                ),
-                const SizedBox(
-                  height: 59,
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      signOut(context);
-                    },
-                    child: Container(
-                      color: HexColor('#D9D9D9').withOpacity(0.00),
-                      child: Center(
-                        child: SizedBox(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(left: 20.0, right: 20.0),
-                            child: Row(
-                              children: [
-                                const Image(
-                                  image: Svg('assets/images/IconLogout.svg'),
-                                  height: 24,
-                                  width: 24,
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.only(left: 7),
-                                  child: Text(
-                                    'Signout',
-                                    style: TextStyle(
-                                        fontFamily: 'Outfit',
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 16,
-                                        color: HexColor('#0D7A5C')),
-                                  ),
-                                ),
-                                const Spacer(),
-                                const Image(
-                                  image: Svg('assets/images/Arrow.svg'),
-                                  height: 24,
-                                  width: 24,
-                                )
-                              ],
+    ),
+    builder: (context) => SizedBox(
+      height: 250,
+      width: 428,
+      child: Column(
+        children: <Widget>[
+          const SizedBox(
+            height: 10,
+          ),
+          const ImageIcon(
+            AssetImage('assets/images/signoutIcon.png'),
+            size: 40,
+            color: Colors.grey,
+          ),
+          Text(
+            'SIGN OUT',
+            style: TextStyle(
+                fontFamily: 'outfit',
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: HexColor('#473B1E')),
+          ),
+          const SizedBox(
+            height: 19,
+          ),
+          Text(
+            'Do you want to log out?',
+            style: TextStyle(
+                fontFamily: 'outfit',
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: HexColor('#473B1E')),
+          ),
+          const SizedBox(
+            height: 59,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0),
+            child: GestureDetector(
+              onTap: () {
+                HelperDialog.signOutDialog(context);
+              },
+              child: Container(
+                color: HexColor('#D9D9D9').withOpacity(0.00),
+                child: Center(
+                  child: SizedBox(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20.0, right: 20.0),
+                      child: Row(
+                        children: [
+                          const Image(
+                            image: Svg('assets/images/IconLogout.svg'),
+                            height: 24,
+                            width: 24,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.only(left: 7),
+                            child: Text(
+                              'Signout',
+                              style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
+                                  color: HexColor('#0D7A5C')),
                             ),
                           ),
-                        ),
+                          const Spacer(),
+                          const Image(
+                            image: Svg('assets/images/Arrow.svg'),
+                            height: 24,
+                            width: 24,
+                          )
+                        ],
                       ),
                     ),
                   ),
                 ),
-                Divider(
-                  height: 21,
-                  indent: 40,
-                  thickness: 2,
-                  endIndent: 35,
-                  color: HexColor('#D9D9D9').withOpacity(0.30),
-                ),
-              ],
+              ),
             ),
-          ));
+          ),
+          Divider(
+            height: 21,
+            indent: 40,
+            thickness: 2,
+            endIndent: 35,
+            color: HexColor('#D9D9D9').withOpacity(0.30),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
-signOut(context) async {
+void signOut(context) async {
+  EasyLoading.show(status: "loading...");
   await AuthService().logout(context);
+  EasyLoading.showSuccess("Logout Successful",
+      duration: const Duration(seconds: 2));
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/rendering.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
@@ -6,7 +7,10 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
+import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:developer' as devtools show log;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,12 +24,12 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController _password;
   String? _emailError;
   String? _passwordError;
-
+  bool _rememberMe = false;
   @override
   void initState() {
     _email = TextEditingController();
     _password = TextEditingController();
-
+    _getRememberMe();
     super.initState();
   }
 
@@ -34,6 +38,32 @@ class _LoginScreenState extends State<LoginScreen> {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  _setRememberMe(email, password, rememberMe) async {
+    devtools.log(_rememberMe.toString());
+    final prefs = await SharedPreferences.getInstance();
+
+    if (rememberMe) {
+      await prefs.setString('email', email);
+      await prefs.setString('password', password);
+      await prefs.setBool('rememberMe', _rememberMe);
+    } else {
+      await prefs.remove('email');
+      await prefs.remove('password');
+      await prefs.setBool('rememberMe', _rememberMe);
+    }
+  }
+
+  Future<void> _getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    _rememberMe = prefs.getBool('rememberMe') ?? false;
+    if (_rememberMe) {
+      setState(() {
+        _email.text = prefs.getString('email').toString();
+        _password.text = prefs.getString('password').toString();
+      });
+    }
   }
 
   bool _validateEmail(String? email) {
@@ -72,14 +102,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return true;
   }
 
-  void login(String email, password, context) async {
+  void login(String email, password, context, rememberMe) async {
     _validateEmail(email);
     _validatePassword(password);
+    _setRememberMe(email, password, rememberMe);
+    EasyLoading.show(status: "loading...");
     if (_emailError == null && _passwordError == null) {
       await AuthService().login(email, password, context);
     } else {
-      showErrorMessage(context,
-          message: "Plese enter valid email and password");
+      EasyLoading.showError("Plese enter valid email and password",
+          duration: const Duration(seconds: 2));
     }
   }
 
@@ -152,9 +184,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Text(_emailError!,
-                                      style:
-                                          const TextStyle(color: Colors.red)),
+                                  Text(
+                                    _emailError!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
                                 ],
                               ),
                             ),
@@ -177,9 +210,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Text(_passwordError!,
-                                      style:
-                                          const TextStyle(color: Colors.red)),
+                                  Text(
+                                    _passwordError!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
                                 ],
                               ),
                             ),
@@ -187,8 +221,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              Checkbox(
+                                  value: _rememberMe,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _rememberMe = value!;
+                                    });
+                                  }),
                               Text(
-                                "Forgot Password?",
+                                "Remember Me",
                                 style: TextStyle(
                                   fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w500,
@@ -204,8 +245,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 70,
                             child: GradientElevatedButton(
                               onPressed: () {
-                                login(_email.text.toString(),
-                                    _password.text.toString(), context);
+                                login(
+                                    _email.text.toString(),
+                                    _password.text.toString(),
+                                    context,
+                                    _rememberMe);
                               },
                               style: GradientElevatedButton.styleFrom(
                                 gradient: LinearGradient(
@@ -236,8 +280,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 70,
                             child: GradientElevatedButton(
                               onPressed: () {
-                                Navigator.of(context).pushNamedAndRemoveUntil(
-                                    registerRoutes, (route) => false);
+                                // Navigator.of(context).pushNamedAndRemoveUntil(
+                                //     registerRoutes, (route) => false);
+                                changeScreenToSignUp(context: context);
                               },
                               style: GradientElevatedButton.styleFrom(
                                 gradient: LinearGradient(

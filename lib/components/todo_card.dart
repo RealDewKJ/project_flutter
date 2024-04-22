@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
+import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
 import 'dart:developer' as devtools show log;
+
+import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
+import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 
 class TodoCard extends StatefulWidget {
   final String title;
@@ -14,6 +18,7 @@ class TodoCard extends StatefulWidget {
   late bool isCompleted;
   final int id;
   final Function(int) deleteCallback;
+  final Function(int, bool) updateStatusCallback;
   TodoCard({
     super.key,
     required this.title,
@@ -22,6 +27,7 @@ class TodoCard extends StatefulWidget {
     required this.isCompleted,
     required this.id,
     required this.deleteCallback,
+    required this.updateStatusCallback,
   });
 
   @override
@@ -32,6 +38,7 @@ class _TodoCardState extends State<TodoCard> {
   void updateItemStatus(TodoCard widget, bool value) async {
     final res = await TodoService().updateTodoStatus(widget, value);
     if (res.statusCode == 200) {
+      widget.updateStatusCallback(widget.id, value);
       setState(() {
         widget.isCompleted = value;
       });
@@ -100,6 +107,8 @@ class _TodoCardState extends State<TodoCard> {
                           children: [
                             Text(
                               widget.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 20,
                                 fontFamily: 'outfit',
@@ -109,6 +118,8 @@ class _TodoCardState extends State<TodoCard> {
                             ),
                             Text(
                               widget.date.toString(),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'outfit',
                                 fontWeight: FontWeight.w500,
@@ -176,6 +187,7 @@ Future _displayBottomSheet(BuildContext context, widget) {
                     onTap: () {
                       Navigator.of(context).pop();
                       navigateToEditPage(context, widget);
+                      // changeScreenToEditPage(context, widget);
                     },
                     child: Container(
                       color: HexColor('#D9D9D9').withOpacity(0.00),
@@ -219,8 +231,17 @@ Future _displayBottomSheet(BuildContext context, widget) {
                   padding: const EdgeInsets.only(left: 46.0, right: 37),
                   child: GestureDetector(
                     onTap: () {
-                      widget.deleteCallback(widget.id);
-                      Navigator.of(context).pop();
+                      showDialogWarningMessage(
+                        context,
+                        message: "Are you sure?",
+                        subtitle: "delete this item",
+                        onYesPressed: () {
+                          widget.deleteCallback(widget.id);
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pop();
+                        },
+                      );
+                      // widget.deleteCallback(widget.id);
                     },
                     child: Container(
                       color: HexColor('#D9D9D9').withOpacity(0.00),

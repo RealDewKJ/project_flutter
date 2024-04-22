@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -11,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:project_flutter_dew/components/todo_card.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
+import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'dart:developer' as devtools show log;
 
@@ -84,37 +86,43 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
   void addTodo(String title, String description, isCompleted) async {
     _validateTitle(title);
     _validateDescription(description);
+    EasyLoading.show(status: "loading...");
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
     if (title.trim() == '' || description.trim() == '') {
-      return showErrorMessage(context,
-          message: 'Please enter title and description');
+      return EasyLoading.showError("Please enter title and description",
+          duration: const Duration(seconds: 2));
     }
 
     var res =
         await TodoService().createTodo(title, description, isCompleted, userId);
     if (res == 200) {
-      showSuccessMessage(context, message: 'Create Successful');
       Navigator.of(context)
           .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
+      EasyLoading.showSuccess("Created Successful",
+          duration: const Duration(seconds: 2));
+      // changeScreenToTodo(context: context);
     } else {
-      showErrorMessage(context, message: 'Failed to Creation');
+      EasyLoading.showError("Failed to Creation",
+          duration: const Duration(seconds: 2));
     }
   }
 
   void updateTodo(String title, String description, isCompleted) async {
+    EasyLoading.show(status: "loading...");
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
     final todoId = widget.todo!.id;
     if (title.trim() == '' || description.trim() == '') {
-      return showErrorMessage(context,
-          message: 'Please enter title and description');
+      return EasyLoading.showError("Please enter title and description",
+          duration: const Duration(seconds: 2));
     }
 
     var res = await TodoService()
         .updateTodo(todoId, title, description, isCompleted, userId);
     if (res == 200) {
-      showSuccessMessage(context, message: 'Updated Successful');
+      EasyLoading.showSuccess("Updated Successful",
+          duration: const Duration(seconds: 2));
       Navigator.of(context)
           .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
     } else {
@@ -128,7 +136,9 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       appBar: AppBar(
         leading: GestureDetector(
           onTap: () {
-            Navigator.of(context).pop();
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil(todoRoutes, (route) => false);
+            // changeScreenToTodo(context: context);
           },
           child: const Padding(
             padding: EdgeInsets.only(left: 21.0),
@@ -160,162 +170,171 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
           ),
         ),
       ),
-      body:
-          // Expanded(
-          //   child: ListView(
-          //     children: [
-          Container(
-        decoration: BoxDecoration(
-          color: HexColor('#D9D9D9').withOpacity(0.09),
-        ),
-        child: Container(
-          padding: const EdgeInsets.only(top: 10, left: 21, right: 17),
-          child: Form(
-            child: ListView(
-              children: [
-                InputForm(
-                  title: 'Title',
-                  value: _title,
-                  obscureText: false,
-                  maxLines: 1,
-                  colorInput: HexColor('#FFFFFF'),
-                  onValueChanged: _validateTitle,
-                  keyboardType: TextInputType.name,
-                  inputAction: TextInputAction.next,
-                ),
-                if (_titleError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(_titleError!,
-                            style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                const SizedBox(
-                  height: 10,
-                ),
-                InputForm(
-                  title: 'Description',
-                  value: _description,
-                  obscureText: false,
-                  maxLines: 6,
-                  colorInput: HexColor('#FFFFFF'),
-                  onValueChanged: _validateDescription,
-                  keyboardType: TextInputType.name,
-                  inputAction: TextInputAction.done,
-                ),
-                if (_descriptionError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(_descriptionError!,
-                            style: const TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: 10.0,
-                  ),
-                  child: SizedBox(
-                    height: 59,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: Colors.white,
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.2),
-                            offset: Offset(0, 0),
-                            blurRadius: 6,
-                            spreadRadius: 0,
+      body: LayoutBuilder(builder: (context, contraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: contraints.maxHeight,
+            ),
+            child: IntrinsicHeight(
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 21.0),
+                        child: InputForm(
+                          title: 'Title',
+                          value: _title,
+                          obscureText: false,
+                          maxLines: 1,
+                          colorInput: HexColor('#FFFFFF'),
+                          onValueChanged: _validateTitle,
+                          keyboardType: TextInputType.name,
+                          inputAction: TextInputAction.next,
+                        ),
+                      ),
+                      if (_titleError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(_titleError!,
+                                  style: const TextStyle(color: Colors.red)),
+                            ],
                           ),
-                        ],
+                        ),
+                      const SizedBox(
+                        height: 10,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 19.0, right: 21.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Success',
-                              style: TextStyle(
-                                  color: HexColor('#0D7A5C'),
-                                  fontFamily: 'outfit',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16),
+                      InputForm(
+                        title: 'Description',
+                        value: _description,
+                        obscureText: false,
+                        maxLines: 6,
+                        colorInput: HexColor('#FFFFFF'),
+                        onValueChanged: _validateDescription,
+                        keyboardType: TextInputType.name,
+                        inputAction: TextInputAction.done,
+                      ),
+                      if (_descriptionError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(_descriptionError!,
+                                  style: const TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 10.0,
+                        ),
+                        child: SizedBox(
+                          height: 59,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.0),
+                              color: Colors.white,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 0, 0.2),
+                                  offset: Offset(0, 0),
+                                  blurRadius: 6,
+                                  spreadRadius: 0,
+                                ),
+                              ],
                             ),
-                            const Spacer(),
-                            CupertinoSwitch(
-                              value: isCompleted,
-                              activeColor: Colors.green,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  isCompleted = value;
-                                });
-                              },
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 19.0, right: 21.0),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Success',
+                                    style: TextStyle(
+                                        color: HexColor('#0D7A5C'),
+                                        fontFamily: 'outfit',
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16),
+                                  ),
+                                  const Spacer(),
+                                  CupertinoSwitch(
+                                    value: isCompleted,
+                                    activeColor: Colors.green,
+                                    onChanged: (bool value) {
+                                      setState(() {
+                                        isCompleted = value;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 30.0),
-                  child: SizedBox(
-                    height: 70,
-                    child: GradientElevatedButton(
-                      onPressed: () {
-                        isEdit
-                            ? updateTodo(
-                                _title.text.toString(),
-                                _description.text.toString(),
-                                isCompleted.toString(),
-                              )
-                            : addTodo(
-                                _title.text.toString(),
-                                _description.text.toString(),
-                                isCompleted.toString(),
-                              );
-                      },
-                      style: GradientElevatedButton.styleFrom(
-                        gradient: LinearGradient(
-                          colors: [
-                            HexColor('#53CD9F'),
-                            HexColor('#0D7A5C'),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                      ),
-                      child: const SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          'Save',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 20,
                           ),
                         ),
                       ),
-                    ),
+                      const Spacer(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 30.0),
+                        child: SizedBox(
+                          height: 70,
+                          child: GradientElevatedButton(
+                            onPressed: () {
+                              isEdit
+                                  ? updateTodo(
+                                      _title.text.toString(),
+                                      _description.text.toString(),
+                                      isCompleted.toString(),
+                                    )
+                                  : addTodo(
+                                      _title.text.toString(),
+                                      _description.text.toString(),
+                                      isCompleted.toString(),
+                                    );
+                            },
+                            style: GradientElevatedButton.styleFrom(
+                              gradient: LinearGradient(
+                                colors: [
+                                  HexColor('#53CD9F'),
+                                  HexColor('#0D7A5C'),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                            ),
+                            child: const SizedBox(
+                              width: double.infinity,
+                              child: Text(
+                                'Save',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Outfit',
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+                // ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }

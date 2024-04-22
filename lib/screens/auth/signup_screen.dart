@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
@@ -6,6 +7,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
+import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -84,6 +86,12 @@ class _SignupScreenState extends State<SignupScreen> {
         _firstNameError = 'Please enter First Name';
       });
       return false;
+    } else if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]')
+        .hasMatch(firstname)) {
+      setState(() {
+        _firstNameError = 'Firstname cannot contain special type';
+      });
+      return false;
     }
     setState(() {
       _firstNameError = null;
@@ -95,6 +103,11 @@ class _SignupScreenState extends State<SignupScreen> {
     if (lastname == null || lastname.isEmpty) {
       setState(() {
         _lastNameError = 'Please enter Last Name';
+      });
+      return false;
+    } else if (RegExp(r'[!@#<>?":_`~;[\]\\|=+)(*&^%0-9-]').hasMatch(lastname)) {
+      setState(() {
+        _lastNameError = 'Lastname cannot contain special type';
       });
       return false;
     }
@@ -109,14 +122,29 @@ class _SignupScreenState extends State<SignupScreen> {
     _validatePassword(password);
     _validateFirstname(firstName);
     _validateLastname(lastName);
+    EasyLoading.show(status: "loading...");
     if (_emailError == null &&
         _passwordError == null &&
         _firstNameError == null &&
         _lastNameError == null) {
-      await AuthService().signUp(firstName, lastName, email, password, context);
+      final res = await AuthService()
+          .signUp(firstName, lastName, email, password, context);
+      if (res == 200) {
+        EasyLoading.showSuccess("Signup Successful",
+            duration: const Duration(seconds: 2));
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(loginRoutes, (route) => false);
+      } else {
+        EasyLoading.showError(
+          "Signup Failed",
+          duration: const Duration(seconds: 2),
+        );
+      }
     } else {
-      showErrorMessage(context,
-          message: "Plese enter valid email and password");
+      EasyLoading.showError(
+        "Signup Failed",
+        duration: const Duration(seconds: 2),
+      );
     }
   }
 
@@ -128,15 +156,17 @@ class _SignupScreenState extends State<SignupScreen> {
           image: DecorationImage(
               image: AssetImage("assets/images/signup.png"), fit: BoxFit.cover),
         ),
-        // child: Expanded(
         child: ListView(
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 15.0, left: 20),
               child: Row(children: [
                 GestureDetector(
-                  onTap: () => Navigator.of(context)
-                      .pushNamedAndRemoveUntil(loginRoutes, (route) => false),
+                  onTap: () {
+                    //=> Navigator.of(context)
+                    //     .pushNamedAndRemoveUntil(loginRoutes, (route) => false),
+                    changeScreenSignUpToSignIn(context: context);
+                  },
                   child: const Image(
                     image: Svg("assets/images/IconArrowleft.svg"),
                   ),
@@ -192,7 +222,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     maxLines: 1,
                     colorInput: HexColor("#F3F3F3"),
                     onValueChanged: _validateFirstname,
-                    keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.text,
                     inputAction: TextInputAction.next,
                   ),
                   if (_firstNameError != null)
@@ -218,7 +248,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     maxLines: 1,
                     colorInput: HexColor("#F3F3F3"),
                     onValueChanged: _validateLastname,
-                    keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.text,
                     inputAction: TextInputAction.next,
                   ),
                   if (_lastNameError != null)
@@ -242,7 +272,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     maxLines: 1,
                     colorInput: HexColor("#F3F3F3"),
                     onValueChanged: _validateEmail,
-                    keyboardType: TextInputType.name,
+                    keyboardType: TextInputType.emailAddress,
                     inputAction: TextInputAction.next,
                   ),
                   if (_emailError != null)
@@ -283,36 +313,39 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(
                     height: 76,
                   ),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 70,
-                    child: GradientElevatedButton(
-                      onPressed: () {
-                        register(
-                            _firstName.text.toString(),
-                            _lastName.text.toString(),
-                            _email.text.toString(),
-                            _password.text.toString());
-                      },
-                      style: GradientElevatedButton.styleFrom(
-                        gradient: LinearGradient(
-                          colors: [
-                            HexColor("#53CD9F"),
-                            HexColor("#0D7A5C"),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 70,
+                      child: GradientElevatedButton(
+                        onPressed: () {
+                          register(
+                              _firstName.text.toString(),
+                              _lastName.text.toString(),
+                              _email.text.toString(),
+                              _password.text.toString());
+                        },
+                        style: GradientElevatedButton.styleFrom(
+                          gradient: LinearGradient(
+                            colors: [
+                              HexColor("#53CD9F"),
+                              HexColor("#0D7A5C"),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                      ),
-                      child: const Text(
-                        "SIGN UP",
-                        style: TextStyle(
-                          fontFamily: 'Outfit',
-                          fontWeight: FontWeight.w400,
-                          fontSize: 20,
+                        child: const Text(
+                          "SIGN UP",
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontWeight: FontWeight.w400,
+                            fontSize: 20,
+                          ),
                         ),
                       ),
                     ),
@@ -323,7 +356,6 @@ class _SignupScreenState extends State<SignupScreen> {
           ],
         ),
       ),
-      // ),
     );
   }
 }
