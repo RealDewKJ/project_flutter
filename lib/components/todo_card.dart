@@ -1,14 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
-import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
 import 'dart:developer' as devtools show log;
 
-import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 
 class TodoCard extends StatefulWidget {
@@ -43,7 +40,8 @@ class _TodoCardState extends State<TodoCard> {
         widget.isCompleted = value;
       });
     } else {
-      devtools.log('failed');
+      EasyLoading.showError('Failed to update status',
+          duration: const Duration(seconds: 2));
     }
   }
 
@@ -111,7 +109,6 @@ class _TodoCardState extends State<TodoCard> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 20,
-                                fontFamily: 'outfit',
                                 fontWeight: FontWeight.w500,
                                 color: HexColor('#0D7A5C'),
                               ),
@@ -121,7 +118,6 @@ class _TodoCardState extends State<TodoCard> {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontFamily: 'outfit',
                                 fontWeight: FontWeight.w500,
                                 fontSize: 12,
                                 color: HexColor('#D9D9D9'),
@@ -134,7 +130,6 @@ class _TodoCardState extends State<TodoCard> {
                                 widget.content,
                                 maxLines: 3,
                                 style: TextStyle(
-                                  fontFamily: 'outfit',
                                   fontWeight: FontWeight.w500,
                                   fontSize: 12,
                                   color: HexColor('#666161').withOpacity(0.68),
@@ -167,7 +162,6 @@ Future _displayBottomSheet(BuildContext context, widget) {
       ),
       builder: (context) => SizedBox(
             height: 250,
-            width: 428,
             child: Column(
               children: <Widget>[
                 const SizedBox(
@@ -187,7 +181,6 @@ Future _displayBottomSheet(BuildContext context, widget) {
                     onTap: () {
                       Navigator.of(context).pop();
                       navigateToEditPage(context, widget);
-                      // changeScreenToEditPage(context, widget);
                     },
                     child: Container(
                       color: HexColor('#D9D9D9').withOpacity(0.00),
@@ -203,7 +196,6 @@ Future _displayBottomSheet(BuildContext context, widget) {
                             child: Text(
                               'Edit',
                               style: TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
                                   color: HexColor('#0D7A5C')),
@@ -257,7 +249,6 @@ Future _displayBottomSheet(BuildContext context, widget) {
                             child: Text(
                               'Delete',
                               style: TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
                                   color: HexColor('#0D7A5C')),

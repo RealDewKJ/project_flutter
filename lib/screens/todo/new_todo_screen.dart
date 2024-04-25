@@ -1,19 +1,13 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:gradient_elevated_button/gradient_elevated_button.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:project_flutter_dew/components/input_form.dart';
-import 'package:http/http.dart' as http;
 import 'package:project_flutter_dew/components/todo_card.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
-import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
-import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +40,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       _description.text = description;
       isCompleted = widget.todo!.isCompleted;
     }
-    devtools.log(isEdit.toString());
     super.initState();
   }
 
@@ -64,6 +57,14 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       });
       return false;
     }
+    if (title.length >= 3) {
+      if (title.substring(0, 3).trim().isEmpty) {
+        setState(() {
+          _titleError = 'Title cannot start with spaces';
+        });
+        return false;
+      }
+    }
     setState(() {
       _titleError = null;
     });
@@ -77,13 +78,22 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       });
       return false;
     }
+    if (description.length >= 3) {
+      if (description.substring(0, 3).trim().isEmpty) {
+        setState(() {
+          _descriptionError = 'Description cannot start with spaces';
+        });
+        return false;
+      }
+    }
+
     setState(() {
       _descriptionError = null;
     });
     return true;
   }
 
-  void addTodo(String title, String description, isCompleted) async {
+  addTodo(String title, String description, isCompleted, context) async {
     _validateTitle(title);
     _validateDescription(description);
     EasyLoading.show(status: "loading...");
@@ -94,21 +104,11 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
           duration: const Duration(seconds: 2));
     }
 
-    var res =
-        await TodoService().createTodo(title, description, isCompleted, userId);
-    if (res == 200) {
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
-      EasyLoading.showSuccess("Created Successful",
-          duration: const Duration(seconds: 2));
-      // changeScreenToTodo(context: context);
-    } else {
-      EasyLoading.showError("Failed to Creation",
-          duration: const Duration(seconds: 2));
-    }
+    await TodoService()
+        .createTodo(title, description, isCompleted, userId, context);
   }
 
-  void updateTodo(String title, String description, isCompleted) async {
+  updateTodo(String title, String description, isCompleted, context) async {
     EasyLoading.show(status: "loading...");
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getInt('user_id');
@@ -117,17 +117,8 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
       return EasyLoading.showError("Please enter title and description",
           duration: const Duration(seconds: 2));
     }
-
-    var res = await TodoService()
-        .updateTodo(todoId, title, description, isCompleted, userId);
-    if (res == 200) {
-      EasyLoading.showSuccess("Updated Successful",
-          duration: const Duration(seconds: 2));
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
-    } else {
-      showErrorMessage(context, message: 'Failed to Update');
-    }
+    await TodoService()
+        .updateTodo(todoId, title, description, isCompleted, userId, context);
   }
 
   @override
@@ -138,7 +129,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
           onTap: () {
             Navigator.of(context)
                 .pushNamedAndRemoveUntil(todoRoutes, (route) => false);
-            // changeScreenToTodo(context: context);
           },
           child: const Padding(
             padding: EdgeInsets.only(left: 21.0),
@@ -151,10 +141,7 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
         title: Text(
           isEdit ? 'Your Todo' : 'Add Your Todo',
           style: const TextStyle(
-              fontFamily: 'outfit',
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-              color: Colors.white),
+              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
         ),
         toolbarHeight: 100,
         flexibleSpace: Container(
@@ -185,15 +172,29 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 21.0),
-                        child: InputForm(
-                          title: 'Title',
-                          value: _title,
-                          obscureText: false,
-                          maxLines: 1,
-                          colorInput: HexColor('#FFFFFF'),
-                          onValueChanged: _validateTitle,
-                          keyboardType: TextInputType.name,
-                          inputAction: TextInputAction.next,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15.0),
+                            color: Colors.white,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color.fromRGBO(0, 0, 0, 0.2),
+                                offset: Offset(0, 0),
+                                blurRadius: 6,
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: InputForm(
+                            title: 'Title',
+                            value: _title,
+                            obscureText: false,
+                            maxLines: 1,
+                            colorInput: HexColor('#FFFFFF'),
+                            onValueChanged: _validateTitle,
+                            keyboardType: TextInputType.name,
+                            inputAction: TextInputAction.next,
+                          ),
                         ),
                       ),
                       if (_titleError != null)
@@ -210,15 +211,29 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                       const SizedBox(
                         height: 10,
                       ),
-                      InputForm(
-                        title: 'Description',
-                        value: _description,
-                        obscureText: false,
-                        maxLines: 6,
-                        colorInput: HexColor('#FFFFFF'),
-                        onValueChanged: _validateDescription,
-                        keyboardType: TextInputType.name,
-                        inputAction: TextInputAction.done,
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15.0),
+                          color: Colors.white,
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color.fromRGBO(0, 0, 0, 0.2),
+                              offset: Offset(0, 0),
+                              blurRadius: 6,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: InputForm(
+                          title: 'Description',
+                          value: _description,
+                          obscureText: false,
+                          maxLines: 6,
+                          colorInput: HexColor('#FFFFFF'),
+                          onValueChanged: _validateDescription,
+                          keyboardType: TextInputType.name,
+                          inputAction: TextInputAction.newline,
+                        ),
                       ),
                       if (_descriptionError != null)
                         Padding(
@@ -259,7 +274,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                                     'Success',
                                     style: TextStyle(
                                         color: HexColor('#0D7A5C'),
-                                        fontFamily: 'outfit',
                                         fontWeight: FontWeight.w500,
                                         fontSize: 16),
                                   ),
@@ -291,12 +305,12 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                                       _title.text.toString(),
                                       _description.text.toString(),
                                       isCompleted.toString(),
-                                    )
+                                      context)
                                   : addTodo(
                                       _title.text.toString(),
                                       _description.text.toString(),
                                       isCompleted.toString(),
-                                    );
+                                      context);
                             },
                             style: GradientElevatedButton.styleFrom(
                               gradient: LinearGradient(
@@ -317,7 +331,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                                 'Save',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 20,
                                 ),
@@ -329,7 +342,6 @@ class _NewTodoScreenState extends State<NewTodoScreen> {
                     ],
                   ),
                 ),
-                // ),
               ),
             ),
           ),

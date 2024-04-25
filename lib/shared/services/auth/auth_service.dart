@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/constant/variables.dart';
-import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -13,7 +12,7 @@ import 'dart:developer' as devtools show log;
 class AuthService {
   String url = api_url;
   final header = api_header;
-  Future<bool> login(
+  Future<http.Response> login(
       String email, String password, BuildContext context) async {
     final api = Uri.parse('$url/login');
     final body = jsonEncode({
@@ -23,7 +22,7 @@ class AuthService {
     try {
       var response = await http.post(api, headers: header, body: body);
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
+        var data = jsonDecode(response.body);
         final SharedPreferences prefs = await SharedPreferences.getInstance();
 
         await prefs.setBool('loggedIn', true);
@@ -35,18 +34,23 @@ class AuthService {
             .pushNamedAndRemoveUntil(todoRoutes, (routes) => false);
         EasyLoading.showSuccess("Login Successful.",
             duration: const Duration(seconds: 2));
-        // changeScreenSignInToTodo(context: context);
-      } else {
-        EasyLoading.showError("Email or password is incorrect.",
+        return response;
+      } else if (response.statusCode == 400) {
+        final responseError = jsonDecode(response.body);
+        String errorMessage = responseError['message'];
+        EasyLoading.showError(errorMessage,
             duration: const Duration(seconds: 2));
-        showErrorMessage(context, message: "Email or password is incorrect.");
+        return response;
+      } else {
+        EasyLoading.showError(jsonDecode(response.body),
+            duration: const Duration(seconds: 2));
+        return response;
       }
     } catch (e) {
-      devtools.log(e.toString());
       EasyLoading.showError("Network is unreachable",
-          duration: const Duration(seconds: 5));
+          duration: const Duration(seconds: 3));
+      return http.Response(e.toString(), 500);
     }
-    return false;
   }
 
   Future<void> logout(context) async {
@@ -66,7 +70,9 @@ class AuthService {
     await prefs.setBool('loggedIn', false);
   }
 
-  Future<int> signUp(firstName, lastName, email, password, context) async {
+  Future<http.Response> signUp(
+      firstName, lastName, email, password, context) async {
+    EasyLoading.show(status: "loading...");
     final api = Uri.parse('$url/create_user');
     final body = jsonEncode({
       "user_email": email,
@@ -74,19 +80,27 @@ class AuthService {
       "user_fname": firstName,
       "user_lname": lastName,
     });
-    devtools.log(body.toString());
     try {
       var response = await http.post(api, headers: header, body: body);
       if (response.body == 'OK') {
-        return response.statusCode;
+        EasyLoading.showSuccess("Signup Successful",
+            duration: const Duration(seconds: 2));
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(loginRoutes, (route) => false);
+        return response;
       } else {
-        return 404;
+        final responseError = jsonDecode(response.body);
+        String errorMessage = responseError['message'];
+        EasyLoading.showError(
+          errorMessage,
+          duration: const Duration(seconds: 2),
+        );
+        return response;
       }
     } catch (e) {
       EasyLoading.showError("Network is unreachable",
-          duration: const Duration(seconds: 5));
-      return 500;
-      // print(e.toString());
+          duration: const Duration(seconds: 3));
+      return http.Response(e.toString(), 500);
     }
   }
 }

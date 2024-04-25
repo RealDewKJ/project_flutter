@@ -6,32 +6,13 @@ import 'package:project_flutter_dew/screens/auth/signup_screen.dart';
 import 'package:project_flutter_dew/screens/todo/new_todo_screen.dart';
 import 'package:project_flutter_dew/screens/todo/todo_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:developer' as devtools show log;
+// import 'dart:developer' as devtools show log;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   bool isLoggedIn = prefs.getBool('loggedIn') ?? false;
-  devtools.log(isLoggedIn.toString());
   runApp(MyApp(isLoggedIn: isLoggedIn));
-  configLoading();
-}
-
-void configLoading() {
-  EasyLoading.instance
-    ..displayDuration = const Duration(milliseconds: 2000)
-    ..indicatorType = EasyLoadingIndicatorType.ring
-    ..loadingStyle = EasyLoadingStyle.dark
-    ..indicatorSize = 45.0
-    ..radius = 10.0
-    ..progressColor = Colors.yellow
-    ..backgroundColor = Colors.green
-    ..indicatorColor = Colors.yellow
-    ..textColor = Colors.yellow
-    ..maskColor = Colors.blue.withOpacity(0.5)
-    ..userInteractions = true
-    ..dismissOnTap = false;
-  // ..customAnimation = CustomAnimation();
 }
 
 class MyApp extends StatelessWidget {

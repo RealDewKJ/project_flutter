@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -11,7 +10,6 @@ import 'package:project_flutter_dew/shared/constant/routes.dart';
 import 'package:project_flutter_dew/shared/models/todo_model.dart';
 import 'package:project_flutter_dew/shared/services/auth/auth_service.dart';
 import 'package:project_flutter_dew/shared/services/todos/todo_service.dart';
-import 'package:project_flutter_dew/shared/utils/animate_helper.dart';
 import 'package:project_flutter_dew/shared/utils/helper_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer' as devtools show log;
@@ -27,12 +25,9 @@ class _TodoScreenState extends State<TodoScreen> {
   late Future<List<Todo>> todos = Future.value([]);
   late Future<List<Todo>> searchTodos = Future.value([]);
   String? readFirstname;
-  String? firstCharFirstName;
   String? readLastname;
   String? fullName;
-  String? isCompleted;
   int? readUserId;
-  Timer? _timer;
 
   @override
   void initState() {
@@ -61,29 +56,21 @@ class _TodoScreenState extends State<TodoScreen> {
         todos = Future.value(updatedTodos);
         searchTodos = todos;
       });
-      EasyLoading.showSuccess("Deleted Successful",
-          duration: const Duration(seconds: 2));
-      showSuccessMessage(context, message: 'Deleted Successful');
     } else {
       EasyLoading.showSuccess("Failed to delete",
           duration: const Duration(seconds: 2));
-      showErrorMessage(context, message: 'Failed to delete');
     }
+    _search.clear();
   }
 
   Future<void> updateStatusById(int id, bool value) async {
     try {
       List<Todo> todoList = await todos;
-
       Todo todoToUpdate = todoList.firstWhere((todo) => todo.id == id);
-
-      if (todoToUpdate != null) {
-        todoToUpdate.isCompleted = value.toString();
-      } else {
-        showErrorMessage(context, message: 'Todo with ID $id not found.');
-      }
+      todoToUpdate.isCompleted = value.toString();
     } catch (e) {
-      EasyLoading.showError(e.toString(), duration: const Duration(seconds: 5));
+      EasyLoading.showError("Network is unreachable",
+          duration: const Duration(seconds: 5));
     }
   }
 
@@ -91,13 +78,11 @@ class _TodoScreenState extends State<TodoScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       readFirstname = prefs.getString('user_fname');
-      firstCharFirstName = readFirstname?.substring(0, 1);
       readLastname = prefs.getString('user_lname');
       readUserId = prefs.getInt('user_id');
       fullName =
           '${readFirstname?[0].toUpperCase()}${readFirstname?.substring(1)} ${readLastname?[0].toUpperCase()}${readLastname?.substring(1)}';
     });
-
     if (readUserId != null) {
       setState(() {
         todos = _getTodos(readUserId!);
@@ -114,15 +99,6 @@ class _TodoScreenState extends State<TodoScreen> {
         .where(
             (todo) => todo.title.toLowerCase().contains(keyword.toLowerCase()))
         .toList();
-    final mappedData = filteredRes.map((todo) {
-      return {
-        'title': todo.title,
-        'description': todo.content,
-        'isCompleted': todo.isCompleted,
-      };
-    }).toList();
-
-    devtools.log(mappedData.toString());
     setState(() {
       searchTodos = Future.value(filteredRes);
     });
@@ -149,9 +125,8 @@ class _TodoScreenState extends State<TodoScreen> {
                 child: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: Text(
-                    firstCharFirstName.toString().toUpperCase(),
+                    readFirstname.toString().substring(0, 1).toUpperCase(),
                     style: TextStyle(
-                      fontFamily: 'outfit',
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
                       color: HexColor('#53CD9F'),
@@ -160,26 +135,28 @@ class _TodoScreenState extends State<TodoScreen> {
                 ),
               ),
               const SizedBox(width: 8.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Hello!',
-                    style: TextStyle(
-                        fontFamily: 'outfit',
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white),
-                  ),
-                  Text(
-                    fullName ?? '',
-                    style: const TextStyle(
-                        fontFamily: 'outfit',
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Hello!',
+                      style: TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white),
+                    ),
+                    Text(
+                      fullName ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -205,10 +182,12 @@ class _TodoScreenState extends State<TodoScreen> {
             ),
           ),
         ),
-        body: Container(
-          child: Column(
-            children: [
-              Padding(
+        body: Column(
+          children: [
+            //* Search bar
+            Container(
+              color: HexColor('#D9D9D9').withOpacity(0.09),
+              child: Padding(
                 padding: const EdgeInsets.only(top: 29.0, bottom: 20.0),
                 child: Center(
                   child: Padding(
@@ -241,7 +220,6 @@ class _TodoScreenState extends State<TodoScreen> {
                             filled: true,
                             hintText: 'Search.......',
                             hintStyle: TextStyle(
-                              fontFamily: 'Outfit',
                               fontWeight: FontWeight.w500,
                               color: HexColor('#AEAEB2'),
                               fontSize: 15,
@@ -253,74 +231,88 @@ class _TodoScreenState extends State<TodoScreen> {
                   ),
                 ),
               ),
-              Expanded(
+            ),
+            Expanded(
+              child: Container(
+                color: HexColor('#D9D9D9').withOpacity(0.09),
                 child: SizedBox(
                   width: double.infinity,
                   height: double.infinity,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: HexColor('#D9D9D9').withOpacity(0.09),
-                    ),
-                    child: RefreshIndicator(
-                      color: Colors.white,
-                      backgroundColor: Colors.blue,
-                      onRefresh: () async {
-                        List<Todo> updatedTodos = await _getTodos(readUserId!);
-                        setState(() {
-                          todos = Future.value(updatedTodos);
-                          searchTodos = Future.value(updatedTodos);
-                        });
-                      },
-                      child: FutureBuilder<List<Todo>>(
-                        future: searchTodos,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          } else if (snapshot.hasData &&
-                              snapshot.connectionState ==
-                                  ConnectionState.done) {
-                            List<Todo>? searchTodos = snapshot.data;
-                            if (searchTodos!.isNotEmpty) {
-                              return ListView.builder(
-                                itemCount: searchTodos.length,
-                                itemBuilder: (context, index) {
-                                  Todo todo = searchTodos[index];
-                                  return TodoCard(
-                                    title: todo.title,
-                                    content: todo.content,
-                                    date: todo.date,
-                                    isCompleted: todo.isCompleted == 'true'
-                                        ? true
-                                        : false,
-                                    id: todo.id,
-                                    deleteCallback: deleteById,
-                                    updateStatusCallback: updateStatusById,
-                                  );
-                                },
-                              );
-                            } else {
-                              return const Center(
-                                child: Text(
-                                  'Data Not Found.',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 20),
+                  child: RefreshIndicator(
+                    color: Colors.white,
+                    backgroundColor: Colors.blue,
+                    onRefresh: () async {
+                      List<Todo> updatedTodos = await _getTodos(readUserId!);
+                      _search.clear();
+                      setState(() {
+                        todos = Future.value(updatedTodos);
+                        searchTodos = Future.value(updatedTodos);
+                      });
+                    },
+                    child: FutureBuilder<List<Todo>>(
+                      future: searchTodos,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasData &&
+                            snapshot.connectionState == ConnectionState.done) {
+                          List<Todo>? searchTodos = snapshot.data;
+                          if (searchTodos!.isNotEmpty) {
+                            return ListView.builder(
+                              itemCount: searchTodos.length,
+                              itemBuilder: (context, index) {
+                                Todo todo = searchTodos[index];
+                                return TodoCard(
+                                  title: todo.title,
+                                  content: todo.content,
+                                  date: todo.date,
+                                  isCompleted:
+                                      todo.isCompleted == 'true' ? true : false,
+                                  id: todo.id,
+                                  deleteCallback: deleteById,
+                                  updateStatusCallback: updateStatusById,
+                                );
+                              },
+                            );
+                          } else if (searchTodos.isEmpty &&
+                              _search.text.isNotEmpty) {
+                            return ListView(
+                              children: const [
+                                Center(
+                                  child: Text(
+                                    'Data Not Found.',
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 20),
+                                  ),
                                 ),
-                              );
-                            }
-                          } else if (snapshot.hasError) {
-                            return Text('${snapshot.error}');
+                              ],
+                            );
+                          } else {
+                            return ListView(
+                              children: const [
+                                Center(
+                                  child: Text(
+                                    'Empty Data.',
+                                    style: TextStyle(
+                                        color: Colors.black, fontSize: 20),
+                                  ),
+                                ),
+                              ],
+                            );
                           }
-                          return const CircularProgressIndicator();
-                        },
-                      ),
+                        } else if (snapshot.hasError) {
+                          return Text('${snapshot.error}');
+                        }
+                        return const CircularProgressIndicator();
+                      },
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: HexColor('#0D7A5C'),
@@ -366,7 +358,6 @@ Future _displayBottomSheet(BuildContext context) {
           Text(
             'SIGN OUT',
             style: TextStyle(
-                fontFamily: 'outfit',
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
                 color: HexColor('#473B1E')),
@@ -377,7 +368,6 @@ Future _displayBottomSheet(BuildContext context) {
           Text(
             'Do you want to log out?',
             style: TextStyle(
-                fontFamily: 'outfit',
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
                 color: HexColor('#473B1E')),
@@ -409,7 +399,6 @@ Future _displayBottomSheet(BuildContext context) {
                             child: Text(
                               'Signout',
                               style: TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
                                   color: HexColor('#0D7A5C')),
